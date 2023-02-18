@@ -4,11 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx --no-install http-server -c-1 -o /"
+    "start": "npm-run-all build test",
+    "test": "npx --no-install http-server -c-1 -o /",
+    "build": "webpack --mode=production"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "npm-run-all": "^4.1.5",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   }
 }
