@@ -47,14 +47,19 @@ const AnimBg  =  {}
 AnimBg.NewtonsCradle = class extends AnimBgBase{
   onInitRenderer() {
     // create engine
-    const engine = Matter.Engine.create()
+    const engine = Matter.Engine.create({
+      positionIterations: 20,
+      velocityIterations: 20,
+    })
 
     // create renderer
+    // https://github.com/liabru/matter-js/wiki/Rendering
     this.render = Matter.Render.create({
       element: this.el,
       engine: engine,
       options: {
-        showVelocity: true
+        wireframes: false,
+        //showVelocity: true,
       }
     })
 
@@ -63,16 +68,17 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
 
     const world  = engine.world
     // see newtonsCradle function defined later in this file
-    const cradle0 = this.createComposite(280, 100, 5, 30, 200)
+    const cradle0 = this.createComposite(100, 100, 15, 30, 200)
     Matter.Composite.add(world, cradle0)
     Matter.Body.translate(cradle0.bodies[0], { x: -180, y: -100 })
 
-    const cradle1 = this.createComposite(280, 380, 7, 20, 140)
-    Matter.Composite.add(world, cradle1)
-    Matter.Body.translate(cradle1.bodies[0], { x: -140, y: -100 })
+    //const cradle1 = this.createComposite(100, 380, 15, 20, 140)
+    //Matter.Composite.add(world, cradle1)
+    //Matter.Body.translate(cradle1.bodies[0], { x: -140, y: -100 })
 
     // add mouse control
-    const mouse = Matter.Mouse.create(this.render.canvas)
+    //const mouse = Matter.Mouse.create(this.render.canvas)
+    const mouse = Matter.Mouse.create(this.el)
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: mouse,
       constraint: {
