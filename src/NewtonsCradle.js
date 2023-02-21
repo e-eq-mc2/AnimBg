@@ -45,11 +45,22 @@ Matter.Render.update = function(render, time) {
 const AnimBg  =  {}
 
 AnimBg.NewtonsCradle = class extends AnimBgBase{
+  constructor(options) {
+    const opt = Object.assign({
+      mouseControls: false,
+      touchControls: false,
+      gyroControls:  false,
+      minHeight:  200,
+    }, options)
+    super(opt)
+  }
+
   onInitRenderer() {
     // create engine
     const engine = Matter.Engine.create({
-      positionIterations: 20,
-      velocityIterations: 20,
+      constraintIterations: 100,
+      positionIterations: 100,
+      velocityIterations: 100,
     })
 
     // create renderer
@@ -59,18 +70,21 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
       engine: engine,
       options: {
         wireframes: false,
+        showDebug: true,
         //showVelocity: true,
       }
     })
 
     // create runner
-    this.runner = Matter.Runner.create()
+    this.runner = Matter.Runner.create({
+      isFixed: true,
+      fps: 80,
+    })
 
     const world  = engine.world
     // see newtonsCradle function defined later in this file
     const cradle0 = this.createComposite(100, 100, 15, 30, 200)
     Matter.Composite.add(world, cradle0)
-    Matter.Body.translate(cradle0.bodies[0], { x: -180, y: -100 })
 
     //const cradle1 = this.createComposite(100, 380, 15, 20, 140)
     //Matter.Composite.add(world, cradle1)
@@ -138,15 +152,20 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
     const newtonsCradle = Matter.Composite.create({ label: 'Newtons Cradle' });
 
     for (var i = 0; i < number; i++) {
-      var separation = 1.9,
+      //var separation = 1.9,
+      var separation = 1.98,
         circle = Matter.Bodies.circle(xx + i * (size * separation), yy + length, size, 
-          { inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.02 }),
+          //{ inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.02 }
+          { inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.00000 }
+        ),
         constraint = Matter.Constraint.create({ pointA: { x: xx + i * (size * separation), y: yy }, bodyB: circle });
 
       Matter.Composite.addBody(newtonsCradle, circle);
       Matter.Composite.addConstraint(newtonsCradle, constraint);
     }
 
+    const angle = -120
+    Matter.Body.translate(newtonsCradle.bodies[0], {x: -length, y: -length})
     return newtonsCradle
   }
 }
