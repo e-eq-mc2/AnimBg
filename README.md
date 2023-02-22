@@ -9,14 +9,15 @@ Animation Background for webpages.
 
 ```js
 <script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/AnimBg/dist/animbg.min.js"></script>
-<scipt> 
-const nc = new AnimBg.NewtonsCradle({
-  el: "#animation-bg",
-  minHeight: 200.00,
-  minWidth: 200.00,
-  scale: 1.00,
-  scaleMobile: 1.00,
-  backgroundColor: 0x00ffff
+<script> 
+AnimBg.NewtonsCradle.run({
+el: "#animation-bg",
+minHeight: 200.00,
+minWidth: 200.00,
+scale: 1.00,
+scaleMobile: 1.00,
+backgroundColor: 0x00ffff,
+texts: ["Animation", "Background"]
 })
 </script>
 ````
@@ -24,5 +25,5 @@ const nc = new AnimBg.NewtonsCradle({
 That's it!
 
 ## Credits
-Vanta JS from https://github.com/tengbao/vanta
-Matter.js from https://github.com/liabru/matter-js
+- Vanta JS from https://github.com/tengbao/vanta
+- Matter.js from https://github.com/liabru/matter-js
