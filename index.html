@@ -9,7 +9,7 @@
   <body>
     <!-- page content -->
     <section id='animation-bg'> 
-      <h1>Animation Background</h1>
+      <h1>AnimBg</h1>
     </section>
     <script src="dist/animbg.min.js"></script>
     <script> 
@@ -20,7 +20,16 @@
         scale: 1.00,
         scaleMobile: 1.00,
         backgroundColor: 0x00ffff,
-        texts: ["Animation", "Background"]
+        newtonsCradles: [
+          {
+            baseX: 150, baseY: 20, size: 50, length: 300,
+            text: "Animation", font: '800 80px Arial',
+          },
+          {
+            baseX: 350, baseY: 500, size: 35, length: 200,
+            text: "Background", font: '800 60px Arial',
+          },
+        ]
       })
     </script>
   </body>

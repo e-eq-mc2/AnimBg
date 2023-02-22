@@ -31,10 +31,11 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       engine: engine,
       options: {
         background: '#ffffff',
+        //wireframeBackground: '#ffffff',
         width: 1,
         height: 1,
         wireframes: false,
-        showDebug: true,
+        //showDebug: true,
       }
     })
 
@@ -44,23 +45,15 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       fps: 90,
     })
 
-    const world  = engine.world
-    const texts = this.options.texts
-    this.textMap = [
-      {
-        baseX: 100, baseY: 50, size: 50, length: 300, label: "line0", 
-        text: texts[0], font: '800 80px Arial', textColor: [], fontOffset: [],
-      },
-      {
-        baseX: 350, baseY: 500, size: 35, length: 200, label: "line1", 
-        text: texts[1], font: '800 60px Arial', textColor: [], fontOffset: [],
-      },
-    ]
+    const world   = engine.world
+    const newtonsCradles = this.options.newtonsCradles
 
-    for(let i=0; i < this.textMap.length; ++i) {
-      const tm = this.textMap[i]
-      const cradle = this.createComposite(tm)
-      Matter.Composite.add(world, cradle)
+    for(let i=0; i < newtonsCradles.length; ++i) {
+      const options = newtonsCradles[i]
+      options.label = `line${i}`
+
+      const nc = this.createNewtonsCradle(options)
+      Matter.Composite.add(world, nc)
     }
 
     // add mouse control
@@ -68,7 +61,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: mouse,
       constraint: {
-        stiffness: 0.2,
+        stiffness: 0.1,
         render: {
           visible: false
         }
@@ -87,9 +80,11 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
   onUpdate (time) {
     Matter.Render.update(this.render, time)
-    for(let i=0; i < this.textMap.length; ++i) {
-      const tm = this.textMap[i]
-      this.renderText(tm)
+
+    const newtonsCradles = this.options.newtonsCradles
+    for(let i=0; i < newtonsCradles.length; ++i) {
+      const options = newtonsCradles[i]
+      this.renderText(options)
     }
 
     if( this.runner.enabled ) {
@@ -107,22 +102,22 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     Matter.Render.setPixelRatio(this.render, window.devicePixelRatio); // added this
   }
 
-  createComposite(tm) {
-    const {baseX, baseY, size, length, label, text, font} = tm
+  createNewtonsCradle(options) {
+    const {baseX, baseY, size, length, label, text, font} = options
 
     const newtonsCradle = Matter.Composite.create()
 
-    tm.textColor  = []
-    tm.textOffset = []
-    const num = tm.text.length
+    options.textColor  = []
+    options.textOffset = []
+    const num = options.text.length
     for (let i = 0; i < num; i++) {
       const color = choose(['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699'])
-      tm.textColor.push(color)
+      options.textColor.push(color)
 
       const char = text[i]
       const csz  = getCharSize(char, font)
 
-      tm.textOffset.push({x: csz.x * 0.5, y: 0})
+      options.textOffset.push({x: - csz.x * 0.5, y: csz.y * 0.25})
 
       //const separation = 1.9
       const separation = 1.95
@@ -146,14 +141,14 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: circle, 
         render:{
           strokeStyle: '#a6a6a6',
-          lineWidth: 2,
+          lineWidth: 3,
       }})
 
       Matter.Composite.addBody(newtonsCradle, circle)
       Matter.Composite.addConstraint(newtonsCradle, constraint)
     }
 
-    const angle = 190
+    const angle = 160
     const dx = Math.cos( angle * Math.PI / 180 ) *   length
     const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
     Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
@@ -161,8 +156,8 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
   }
 
-  renderText(tm) {
-    const {label, text, font, textColor, textOffset} = tm
+  renderText(options) {
+    const {label, text, font, textColor, textOffset} = options
 
     const engine  = this.render.engine
     const context = this.render.context
@@ -242,8 +237,8 @@ const getCharSize = (char, font) => {
   parent.insertAdjacentHTML('beforeend', `<p id="${id}" style="font:${font}; display:inline">${char}</p>`)
   const elm = document.getElementById(id)
 
-  const height = elm.offsetHeight
   const width  = elm.offsetWidth
+  const height = elm.offsetHeight
 
   elm.remove()
 

@@ -1,7 +1,8 @@
 #animation-bg {
-  color: orange;
-  font-size: 70px;
+  color: #003366;
+  font-size: 65px;
   border: solid;
+  font-weight: 900;
   padding: 400px 50px 400px;
 }
 
