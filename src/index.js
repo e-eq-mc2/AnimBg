@@ -1,7 +1,5 @@
 import AnimBg from './newtonsCradle.js'
 
-console.log('Hello, Webpack!')
-
 const n = new AnimBg.NewtonsCradle({
   el: "#animation-bg",
   minHeight: 200.00,

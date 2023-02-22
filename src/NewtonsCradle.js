@@ -42,6 +42,26 @@ Matter.Render.update = function(render, time) {
   };
 }
 
+const choose = (choices) => {
+  return choices[Math.floor(Math.random() * choices.length)];
+}
+
+const getCharSize = (char, font) => {
+  const parent = document.body
+  const id = `to-get-char-size-${Math.random().toString(32).substring(2)}`
+
+  parent.insertAdjacentHTML('beforeend', `<p id="${id}" style="font:${font}; display:inline">${char}</p>`)
+  const elm = document.getElementById(id)
+
+  const height = elm.offsetHeight
+  const width  = elm.offsetWidth
+
+  elm.remove()
+
+  return {x: width, y: height}
+}
+
+
 const AnimBg  =  {}
 
 AnimBg.NewtonsCradle = class extends AnimBgBase{
@@ -69,29 +89,39 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
       element: this.el,
       engine: engine,
       options: {
+        background: '#ffffff',
+        width: 1,
+        height: 1,
         wireframes: false,
         showDebug: true,
-        //showVelocity: true,
       }
     })
 
     // create runner
     this.runner = Matter.Runner.create({
-      isFixed: true,
-      fps: 80,
+      //isFixed: true,
+      fps: 90,
     })
 
     const world  = engine.world
-    // see newtonsCradle function defined later in this file
-    const cradle0 = this.createComposite(100, 100, 15, 30, 200)
-    Matter.Composite.add(world, cradle0)
+    this.textMap = [
+      {
+        baseX: 100, baseY: 50, size: 50, length: 300, label: "line0", 
+        text: "ぷろぐらみんぐ", font: '800 80px Arial', textColor: [], fontOffset: [],
+      },
+      {
+        baseX: 350, baseY: 500, size: 35, length: 200, label: "line1", 
+        text: "すくーる", font: '800 60px Arial', textColor: [], fontOffset: [],
+      },
+    ]
 
-    //const cradle1 = this.createComposite(100, 380, 15, 20, 140)
-    //Matter.Composite.add(world, cradle1)
-    //Matter.Body.translate(cradle1.bodies[0], { x: -140, y: -100 })
+    for(let i=0; i < this.textMap.length; ++i) {
+      const tm = this.textMap[i]
+      const cradle = this.createComposite(tm)
+      Matter.Composite.add(world, cradle)
+    }
 
     // add mouse control
-    //const mouse = Matter.Mouse.create(this.render.canvas)
     const mouse = Matter.Mouse.create(this.el)
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: mouse,
@@ -107,13 +137,6 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
 
     // keep the mouse in sync with rendering
     this.render.mouse = mouse
-
-    // fit the render viewport to the scene
-    Matter.Render.lookAt(this.render, {
-      min: { x: 0, y: 50 },
-      max: { x: 800, y: 600 }
-    })
-
   }
 
 	getCanvasElement()  {
@@ -122,6 +145,10 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
 
   onUpdate (time) {
     Matter.Render.update(this.render, time)
+    for(let i=0; i < this.textMap.length; ++i) {
+      const tm = this.textMap[i]
+      this.renderText(tm)
+    }
 
     if( this.runner.enabled ) {
       Matter.Runner.tick(this.runner, this.render.engine, time)
@@ -138,35 +165,87 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
     Matter.Render.setPixelRatio(this.render, window.devicePixelRatio); // added this
   }
 
-  /**
-   * Creates a composite with a Newton's Cradle setup of bodies and constraints.
-   * @method newtonsCradle
-   * @param {number} xx
-   * @param {number} yy
-   * @param {number} number
-   * @param {number} size
-   * @param {number} length
-   * @return {composite} A new composite newtonsCradle body
-   */
-  createComposite(xx, yy, number, size, length) {
-    const newtonsCradle = Matter.Composite.create({ label: 'Newtons Cradle' });
+  createComposite(tm) {
+    const {baseX, baseY, size, length, label, text, font} = tm
 
-    for (var i = 0; i < number; i++) {
-      //var separation = 1.9,
-      var separation = 1.98,
-        circle = Matter.Bodies.circle(xx + i * (size * separation), yy + length, size, 
-          //{ inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.02 }
-          { inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.00000 }
-        ),
-        constraint = Matter.Constraint.create({ pointA: { x: xx + i * (size * separation), y: yy }, bodyB: circle });
+    const newtonsCradle = Matter.Composite.create()
 
-      Matter.Composite.addBody(newtonsCradle, circle);
-      Matter.Composite.addConstraint(newtonsCradle, constraint);
+    tm.textColor  = []
+    tm.textOffset = []
+    const num = tm.text.length
+    for (let i = 0; i < num; i++) {
+      const color = choose(['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66'])
+      tm.textColor.push(color)
+
+      const char = text[i]
+      const csz  = getCharSize(char, font)
+
+      tm.textOffset.push({x: csz.x * 0.5, y: 0})
+
+      //const separation = 1.9
+      const separation = 1.95
+      const x = baseX + i * (size * separation)
+      const y = baseY + length
+
+      const circle = Matter.Bodies.circle(
+        x,
+        y,
+        size,
+        { 
+          inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005, label: label,
+          render: {
+            fillStyle: '#ffffff',
+            strokeStyle: '#a6a6a6',
+            lineWidth: 8,
+          },
+        },
+      )
+
+      const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: circle, 
+        render:{
+          strokeStyle: '#a6a6a6',
+          lineWidth: 2,
+      }})
+
+      Matter.Composite.addBody(newtonsCradle, circle)
+      Matter.Composite.addConstraint(newtonsCradle, constraint)
     }
 
-    const angle = -120
-    Matter.Body.translate(newtonsCradle.bodies[0], {x: -length, y: -length})
+    const angle = 190
+    const dx = Math.cos( angle * Math.PI / 180 ) *   length
+    const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
+    Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
     return newtonsCradle
+
+  }
+
+  renderText(tm) {
+    const {label, text, font, textColor, textOffset} = tm
+
+    const engine  = this.render.engine
+    const context = this.render.context
+    const bodies  = this.getBodiesByLabel(label, engine)
+
+    for(let i = 0; i < bodies.length; ++i) {
+      const char = text[i]
+      if ( !char ) break 
+
+      const body  = bodies[i]
+      const color = textColor[i]
+      const off   = textOffset[i]
+
+
+      const x    = body.position.x + off.x
+      const y    = body.position.y + off.y
+
+      context.font = font
+      context.fillStyle = color
+      context.fillText(char, x, y)
+    }
+  }
+
+  getBodiesByLabel(label, engine) {
+    return Matter.Composite.allBodies(engine.world).filter(body => body.label === label)
   }
 }
 
