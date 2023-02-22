@@ -11,13 +11,22 @@ Animation Background for webpages.
 <script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/AnimBg/dist/animbg.min.js"></script>
 <script> 
 AnimBg.NewtonsCradle.run({
-el: "#animation-bg",
-minHeight: 200.00,
-minWidth: 200.00,
-scale: 1.00,
-scaleMobile: 1.00,
-backgroundColor: 0x00ffff,
-texts: ["Animation", "Background"]
+  el: "#animation-bg",
+  minHeight: 200.00,
+  minWidth: 200.00,
+  scale: 1.00,
+  scaleMobile: 1.00,
+  backgroundColor: 0x00ffff,
+  newtonsCradles: [
+    {
+      baseX: 150, baseY: 20, size: 50, length: 300,
+      text: "Animation", font: '800 80px Arial',
+    },
+    {
+      baseX: 350, baseY: 500, size: 35, length: 200,
+      text: "Background", font: '800 60px Arial',
+    },
+  ]
 })
 </script>
 ````
