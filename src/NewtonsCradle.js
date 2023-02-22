@@ -1,67 +1,11 @@
 import AnimBgBase, {AnimBg} from './base.js'
 import Matter from 'matter-js'
 
-Matter.Render.update = function(render, time) {
-  _updateTiming(render, time)
-  this.world(render, time)
-
-  if (render.options.showStats || render.options.showDebug) {
-    this.stats(render, render.context, time);
-  }
-
-  if (render.options.showPerformance || render.options.showDebug) {
-    this.performance(render, render.context, time);
-  }
-
-  function _updateTiming(render, time) {
-    var engine = render.engine,
-      timing = render.timing,
-      historySize = timing.historySize,
-      timestamp = engine.timing.timestamp;
-
-    timing.delta = time - timing.lastTime || Matter.Render._goodDelta;
-    timing.lastTime = time;
-
-    timing.timestampElapsed = timestamp - timing.lastTimestamp || 0;
-    timing.lastTimestamp = timestamp;
-
-    timing.deltaHistory.unshift(timing.delta);
-    timing.deltaHistory.length = Math.min(timing.deltaHistory.length, historySize);
-
-    timing.engineDeltaHistory.unshift(engine.timing.lastDelta);
-    timing.engineDeltaHistory.length = Math.min(timing.engineDeltaHistory.length, historySize);
-
-    timing.timestampElapsedHistory.unshift(timing.timestampElapsed);
-    timing.timestampElapsedHistory.length = Math.min(timing.timestampElapsedHistory.length, historySize);
-
-    timing.engineElapsedHistory.unshift(engine.timing.lastElapsed);
-    timing.engineElapsedHistory.length = Math.min(timing.engineElapsedHistory.length, historySize);
-
-    timing.elapsedHistory.unshift(timing.lastElapsed);
-    timing.elapsedHistory.length = Math.min(timing.elapsedHistory.length, historySize);
-  };
-}
-
-const choose = (choices) => {
-  return choices[Math.floor(Math.random() * choices.length)];
-}
-
-const getCharSize = (char, font) => {
-  const parent = document.body
-  const id = `to-get-char-size-${Math.random().toString(32).substring(2)}`
-
-  parent.insertAdjacentHTML('beforeend', `<p id="${id}" style="font:${font}; display:inline">${char}</p>`)
-  const elm = document.getElementById(id)
-
-  const height = elm.offsetHeight
-  const width  = elm.offsetWidth
-
-  elm.remove()
-
-  return {x: width, y: height}
-}
-
 AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
+  static run(options) {
+    const nc = new NewtonsCradle(options)
+  }
+
   constructor(options) {
     const opt = Object.assign({
       mouseControls: false,
@@ -101,14 +45,15 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     })
 
     const world  = engine.world
+    const texts = this.options.texts
     this.textMap = [
       {
         baseX: 100, baseY: 50, size: 50, length: 300, label: "line0", 
-        text: "ぷろぐらみんぐ", font: '800 80px Arial', textColor: [], fontOffset: [],
+        text: texts[0], font: '800 80px Arial', textColor: [], fontOffset: [],
       },
       {
         baseX: 350, baseY: 500, size: 35, length: 200, label: "line1", 
-        text: "すくーる", font: '800 60px Arial', textColor: [], fontOffset: [],
+        text: texts[1], font: '800 60px Arial', textColor: [], fontOffset: [],
       },
     ]
 
@@ -171,7 +116,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     tm.textOffset = []
     const num = tm.text.length
     for (let i = 0; i < num; i++) {
-      const color = choose(['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66'])
+      const color = choose(['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699'])
       tm.textColor.push(color)
 
       const char = text[i]
@@ -231,9 +176,8 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       const color = textColor[i]
       const off   = textOffset[i]
 
-
-      const x    = body.position.x + off.x
-      const y    = body.position.y + off.y
+      const x = body.position.x + off.x
+      const y = body.position.y + off.y
 
       context.font = font
       context.fillStyle = color
@@ -246,4 +190,64 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   }
 }
 
-//AnimBg.NewtonsCradle = NewtonsCradle
+Matter.Render.update = function(render, time) {
+  _updateTiming(render, time)
+  this.world(render, time)
+
+  if (render.options.showStats || render.options.showDebug) {
+    this.stats(render, render.context, time);
+  }
+
+  if (render.options.showPerformance || render.options.showDebug) {
+    this.performance(render, render.context, time);
+  }
+
+  function _updateTiming(render, time) {
+    var engine = render.engine,
+      timing = render.timing,
+      historySize = timing.historySize,
+      timestamp = engine.timing.timestamp;
+
+    timing.delta = time - timing.lastTime || Matter.Render._goodDelta;
+    timing.lastTime = time;
+
+    timing.timestampElapsed = timestamp - timing.lastTimestamp || 0;
+    timing.lastTimestamp = timestamp;
+
+    timing.deltaHistory.unshift(timing.delta);
+    timing.deltaHistory.length = Math.min(timing.deltaHistory.length, historySize);
+
+    timing.engineDeltaHistory.unshift(engine.timing.lastDelta);
+    timing.engineDeltaHistory.length = Math.min(timing.engineDeltaHistory.length, historySize);
+
+    timing.timestampElapsedHistory.unshift(timing.timestampElapsed);
+    timing.timestampElapsedHistory.length = Math.min(timing.timestampElapsedHistory.length, historySize);
+
+    timing.engineElapsedHistory.unshift(engine.timing.lastElapsed);
+    timing.engineElapsedHistory.length = Math.min(timing.engineElapsedHistory.length, historySize);
+
+    timing.elapsedHistory.unshift(timing.lastElapsed);
+    timing.elapsedHistory.length = Math.min(timing.elapsedHistory.length, historySize);
+  };
+}
+
+const choose = (choices) => {
+  return choices[Math.floor(Math.random() * choices.length)];
+}
+
+const getCharSize = (char, font) => {
+  const parent = document.body
+  const id = `to-get-char-size-${Math.random().toString(32).substring(2)}`
+
+  parent.insertAdjacentHTML('beforeend', `<p id="${id}" style="font:${font}; display:inline">${char}</p>`)
+  const elm = document.getElementById(id)
+
+  const height = elm.offsetHeight
+  const width  = elm.offsetWidth
+
+  elm.remove()
+
+  return {x: width, y: height}
+}
+
+
