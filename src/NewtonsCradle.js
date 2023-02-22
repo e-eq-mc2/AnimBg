@@ -19,9 +19,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   onInitRenderer() {
     // create engine
     const engine = Matter.Engine.create({
-      constraintIterations: 100,
-      positionIterations: 100,
-      velocityIterations: 100,
+      constraintIterations: 20,
+      positionIterations: 20,
+      velocityIterations: 20,
     })
 
     // create renderer
