@@ -1,4 +1,4 @@
-import AnimBgBase from './base.js'
+import AnimBgBase, {AnimBg} from './base.js'
 import Matter from 'matter-js'
 
 Matter.Render.update = function(render, time) {
@@ -61,10 +61,7 @@ const getCharSize = (char, font) => {
   return {x: width, y: height}
 }
 
-
-const AnimBg  =  {}
-
-AnimBg.NewtonsCradle = class extends AnimBgBase{
+AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   constructor(options) {
     const opt = Object.assign({
       mouseControls: false,
@@ -249,4 +246,4 @@ AnimBg.NewtonsCradle = class extends AnimBgBase{
   }
 }
 
-export default AnimBg
+//AnimBg.NewtonsCradle = NewtonsCradle

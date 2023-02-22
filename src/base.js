@@ -1,6 +1,12 @@
 //  Based  on  https://github.com/tengbao/vanta
 
 const win = typeof window == 'object'
+
+if (win && !window.AnimBg) window.AnimBg = {}
+const AnimBg = (win && window.AnimBg) || {}
+
+export {AnimBg}
+
 //  ----  Helper  functions  ----
 const  error  =  function()  {
   Array.prototype.unshift.call(arguments,  '[ANIMBG]')
@@ -327,6 +333,5 @@ class AnimBgBase {
     }
   }
 }
-
 
 export default AnimBgBase
