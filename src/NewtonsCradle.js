@@ -94,9 +94,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     })
   }
 
-	getCanvasElement()  {
+  getCanvasElement()  {
     return this.render.canvas
-	}
+  }
 
   onUpdate (time) {
     Matter.Render.update(this.render, time)
