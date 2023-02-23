@@ -7,7 +7,7 @@ Animation Background for webpages.
 
 ## How to use
 
-```js
+```html
 <script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/AnimBg/dist/animbg.min.js"></script>
 <script> 
 AnimBg.NewtonsCradle.run({
