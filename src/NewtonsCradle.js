@@ -1,6 +1,7 @@
 import AnimBgBase, {AnimBg} from './base.js'
 import Matter from 'matter-js'
 
+
 AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   static run(options) {
     const nc = new NewtonsCradle(options)
@@ -45,6 +46,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       fps: 90,
     })
 
+    this.fillColors = ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',]
+    this.textColors = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699']
+
     const world   = engine.world
     const newtonsCradles = this.options.newtonsCradles
 
@@ -58,20 +62,36 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
     // add mouse control
     const mouse = Matter.Mouse.create(this.el)
+    Matter.Mouse.unsetWheel(mouse)
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: mouse,
       constraint: {
-        stiffness: 0.1,
+        stiffness: 0.2,
         render: {
           visible: false
         }
       }
     })
-
     Matter.Composite.add(world, mouseConstraint)
 
-    // keep the mouse in sync with rendering
-    this.render.mouse = mouse
+    //Add event with 'mousemove'
+    const ctx = this
+    Matter.Events.on(mouseConstraint, 'mousemove', function (event) {
+      const mouse = event.mouse
+      const bodies = Matter.Composite.allBodies(engine.world)
+      const pickedBodies = Matter.Query.point(bodies, mouse.position)
+
+      if ( pickedBodies.length === 0 ) return
+
+      const pb = pickedBodies[0]
+
+      if ( !ctx.currentColor || bodies.every( e => e.render.fillStyle === pb.render.fillStyle ) ) {
+        const colors = ctx.fillColors.filter( e => e !== pb.render.fillStyle)
+        ctx.currentColor = choose( colors )
+      }
+
+      pb.render.fillStyle = ctx.currentColor
+    })
   }
 
 	getCanvasElement()  {
@@ -102,6 +122,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     Matter.Render.setPixelRatio(this.render, window.devicePixelRatio); // added this
   }
 
+  onMouseMove(xNorm, yNorm) {
+  }
+
   createNewtonsCradle(options) {
     const {baseX, baseY, size, length, label, text, font} = options
 
@@ -111,8 +134,8 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     options.textOffset = []
     const num = options.text.length
     for (let i = 0; i < num; i++) {
-      const color = choose(['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699'])
-      options.textColor.push(color)
+      const tc = choose(this.textColors)
+      options.textColor.push(tc)
 
       const char = text[i]
       const csz  = getCharSize(char, font)
@@ -121,9 +144,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
       //const separation = 1.9
       const separation = 1.95
-      const x = baseX + i * (size * separation)
-      const y = baseY + length
-
+      const fc = this.fillColors[0]
+      const x  = baseX + i * (size * separation)
+      const y  = baseY + length
       const circle = Matter.Bodies.circle(
         x,
         y,
@@ -131,7 +154,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         { 
           inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005, label: label,
           render: {
-            fillStyle: '#ffffff',
+            fillStyle: fc,
             strokeStyle: '#a6a6a6',
             lineWidth: 8,
           },
@@ -185,6 +208,22 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   }
 }
 
+Matter.Mouse.unsetWheel = function(mouse) {
+  const element = mouse.element
+  const  rm     =  element.removeEventListener
+
+  //element.removeEventListener('mousemove', mouse.mousemove);
+  //element.removeEventListener('mousedown', mouse.mousedown);
+  //element.removeEventListener('mouseup', mouse.mouseup);
+
+  element.removeEventListener('mousewheel', mouse.mousewheel);
+  //element.removeEventListener('DOMMouseScroll', mouse.mousewheel);
+
+  //element.removeEventListener('touchmove', mouse.mousemove);
+  //element.removeEventListener('touchstart', mouse.mousedown);
+  //element.removeEventListener('touchend', mouse.mouseup);
+}
+
 Matter.Render.update = function(render, time) {
   _updateTiming(render, time)
   this.world(render, time)
@@ -223,7 +262,7 @@ Matter.Render.update = function(render, time) {
 
     timing.elapsedHistory.unshift(timing.lastElapsed);
     timing.elapsedHistory.length = Math.min(timing.elapsedHistory.length, historySize);
-  };
+  }
 }
 
 const choose = (choices) => {
@@ -244,5 +283,3 @@ const getCharSize = (char, font) => {
 
   return {x: width, y: height}
 }
-
-

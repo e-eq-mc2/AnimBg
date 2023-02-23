@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm-run-all build test",
     "test": "npx --no-install http-server -c-1 -o /",
-    "build": "webpack --mode=production"
+    "build": "webpack --mode=development"
   },
   "author": "",
   "license": "ISC",

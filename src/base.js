@@ -233,10 +233,7 @@ class AnimBgBase {
         y  =  this.mouseY
       }
     }
-    if  (this.uniforms)  {
-      this.uniforms.iMouse.value.x  =  x  /  this.scale  //  pixel  values
-      this.uniforms.iMouse.value.y  =  y  /  this.scale  //  pixel  values
-    }
+
     const  xNorm  =  x  /  this.width  //  0  to  1
     const  yNorm  =  y  /  this.height  //  0  to  1
     typeof  this.onMouseMove  ===  "function"  ?  this.onMouseMove(xNorm,  yNorm)  :  void  0
