@@ -69,8 +69,8 @@ class AnimBgBase {
     }
 
     this.prepareEl()
-    this.initRenderer()
     this.setSize()  //  Init  needs  size
+    this.initRenderer()
 
     try  {
       this.init()
@@ -153,6 +153,8 @@ class AnimBgBase {
       top:  0,
       left:  0,
       background:  '',
+      width: '100%',
+      height: 'auto',
     })
     if  (this.options.pixelated)  {
       canvasEl.style.imageRendering  =  'pixelated'

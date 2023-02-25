@@ -33,8 +33,8 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       options: {
         background: '#ffffff',
         //wireframeBackground: '#ffffff',
-        width: 1,
-        height: 1,
+        width: this.width,
+        height: this.height,
         wireframes: false,
         //showDebug: true,
       }
@@ -61,7 +61,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     }
 
     // add mouse control
-    const mouse = Matter.Mouse.create(this.el)
+    const mouse = Matter.Mouse.create(this.render.canvas)
     Matter.Mouse.unsetWheel(mouse)
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: mouse,
@@ -78,20 +78,28 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const ctx = this
     Matter.Events.on(mouseConstraint, 'mousemove', function (event) {
       const mouse = event.mouse
-      const bodies = Matter.Composite.allBodies(engine.world)
-      const pickedBodies = Matter.Query.point(bodies, mouse.position)
+      const bodies = Matter.Query.point(
+        Matter.Composite.allBodies(engine.world), 
+        mouse.position
+      )
 
-      if ( pickedBodies.length === 0 ) return
+      if ( bodies.length === 0 ) return
 
-      const pb = pickedBodies[0]
+      const body = bodies[0]
 
-      if ( !ctx.currentColor || bodies.every( e => e.render.fillStyle === pb.render.fillStyle ) ) {
-        const colors = ctx.fillColors.filter( e => e !== pb.render.fillStyle)
+      if ( !ctx.currentColor || bodies.every( e => e.render.fillStyle === body.render.fillStyle ) ) {
+        const colors = ctx.fillColors.filter( e => e !== body.render.fillStyle)
         ctx.currentColor = choose( colors )
       }
 
-      pb.render.fillStyle = ctx.currentColor
+      body.render.fillStyle = ctx.currentColor
     })
+
+    // fit the render viewport to the scene
+    //Matter.Render.lookAt(this.render, {
+    //    min: { x: 0, y: 0 },
+    //    max: { x: 800, y: 600 }
+    //});
   }
 
   getCanvasElement()  {
@@ -100,6 +108,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
   onUpdate (time) {
     Matter.Render.update(this.render, time)
+
 
     const newtonsCradles = this.options.newtonsCradles
     for(let i=0; i < newtonsCradles.length; ++i) {
@@ -113,13 +122,14 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   }
 
   onResize() {
-    this.render.bounds.max.x   = this.width
-    this.render.bounds.max.y   = this.height
-    this.render.options.width  = this.width
-    this.render.options.height = this.height
-    this.render.canvas.width   = this.width
-    this.render.canvas.height  = this.heigh
-    Matter.Render.setPixelRatio(this.render, window.devicePixelRatio); // added this
+    console.log(this.render.canvas.height, this.render.canvas.style.height)
+    //this.render.bounds.max.x   = this.width
+    //this.render.bounds.max.y   = this.height
+    //this.render.options.width  = this.width
+    //this.render.options.height = this.height
+    //this.render.canvas.width   = this.width
+    //this.render.canvas.height  = this.height
+    //Matter.Render.setPixelRatio(this.render, window.devicePixelRatio); // added this
   }
 
   onMouseMove(xNorm, yNorm) {

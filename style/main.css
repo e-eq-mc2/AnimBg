@@ -3,6 +3,9 @@
   font-size: 65px;
   border: solid;
   font-weight: 900;
-  padding: 400px 50px 400px;
+  /*padding: 400px 0px 400px;*/
 }
 
+#animation-bg canvas {
+  border: solid #ff0000;
+}
