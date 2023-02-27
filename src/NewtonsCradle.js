@@ -9,10 +9,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
   constructor(options) {
     const opt = Object.assign({
-      mouseControls: false,
-      touchControls: false,
+      //mouseControls: false,
+      //touchControls: false,
       gyroControls:  false,
-      minHeight:  200,
     }, options)
     super(opt)
   }
@@ -60,11 +59,23 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       Matter.Composite.add(world, nc)
     }
 
+   // fit the render viewport to the scene
+    //Matter.Render.lookAt(this.render, {
+    //    min: { x: 0, y: 0 },
+    //    max: { x: 800, y: 600 }
+    //});
+  }
+
+  onInitMouse() {
+    const engine = this.render.engine
+    const world  = engine.world
+
     // add mouse control
-    const mouse = Matter.Mouse.create(this.render.canvas)
-    Matter.Mouse.unsetWheel(mouse)
+    //const mouse = Matter.Mouse.create(this.render.canvas)
+    //Matter.Mouse.unsetWheel(mouse)
+
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
-      mouse: mouse,
+      mouse: this.mouse,
       constraint: {
         stiffness: 0.2,
         render: {
@@ -78,29 +89,24 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const ctx = this
     Matter.Events.on(mouseConstraint, 'mousemove', function (event) {
       const mouse = event.mouse
-      const bodies = Matter.Query.point(
+      const foundBodies = Matter.Query.point(
         Matter.Composite.allBodies(engine.world), 
         mouse.position
       )
 
-      if ( bodies.length === 0 ) return
+      if ( foundBodies.length === 0 ) return
 
-      const body = bodies[0]
-
-      if ( !ctx.currentColor || bodies.every( e => e.render.fillStyle === body.render.fillStyle ) ) {
-        const colors = ctx.fillColors.filter( e => e !== body.render.fillStyle)
+      const fb = foundBodies[0]
+      const allBodies = Matter.Composite.allBodies(engine.world)
+      if ( !ctx.currentColor || allBodies.every( e => e.render.fillStyle === fb.render.fillStyle ) ) {
+        console.log(fb, ctx.currentColor)
+        const colors = ctx.fillColors.filter( e => e !== fb.render.fillStyle)
         ctx.currentColor = choose( colors )
       }
 
-      body.render.fillStyle = ctx.currentColor
+      fb.render.fillStyle = ctx.currentColor
     })
-
-    // fit the render viewport to the scene
-    //Matter.Render.lookAt(this.render, {
-    //    min: { x: 0, y: 0 },
-    //    max: { x: 800, y: 600 }
-    //});
-  }
+   }
 
   getCanvasElement()  {
     return this.render.canvas
@@ -122,7 +128,6 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   }
 
   onResize() {
-    console.log(this.render.canvas.height, this.render.canvas.style.height)
     //this.render.bounds.max.x   = this.width
     //this.render.bounds.max.y   = this.height
     //this.render.options.width  = this.width
