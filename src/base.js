@@ -25,17 +25,42 @@ const  color2Hex  =  function(color)  {
     return  '#'  +    ('00000'  +  color.toString(16)).slice(-6)
   }  else  return  color
 }
+
+
+class Mouse {
+  constructor() {
+      this.position     = {x: 0, y: 0}
+      this.scale        = {x: 0, y: 0}
+      this.absolute     = {x: 0, y: 0}
+      this.offset       = {x: 0, y: 0}
+      this.button       = -1
+      this.sourceEvents = {
+        mousemove: null,
+        mousedown: null,
+        mouseup: null,
+        mousewheel: null,
+      }
+  }
+
+  setPosition(position) {
+    this.absolute.x = position.x
+    this.absolute.y = position.y
+    this.position.x = this.absolute.x * this.scale.x + this.offset.x
+    this.position.y = this.absolute.y * this.scale.y + this.offset.y
+  }
+
+}
+
 //  ----  ----------------  ----
 
 class AnimBgBase {
   constructor(userOptions  =  {})  {
     if  (!win)  return  false
 
-    this.windowMouseMoveWrapper  =  this.windowMouseMoveWrapper.bind(this)
-    this.windowMouseDownWrapper  =  this.windowMouseDownWrapper.bind(this)
-    this.windowMouseUpWrapper  =  this.windowMouseUpWrapper.bind(this)
-    this.windowTouchWrapper  =  this.windowTouchWrapper.bind(this)
-    this.windowGyroWrapper  =  this.windowGyroWrapper.bind(this)
+    this.windowMouseMoveWrapper = this.windowMouseMoveWrapper.bind(this)
+    this.windowMouseDownWrapper = this.windowMouseDownWrapper.bind(this)
+    this.windowMouseUpWrapper   = this.windowMouseUpWrapper.bind(this)
+
     this.resize  =  this.resize.bind(this)
     this.animationLoop  =  this.animationLoop.bind(this)
     this.restart  =  this.restart.bind(this)
@@ -44,7 +69,6 @@ class AnimBgBase {
     this.options  =  Object.assign({
       mouseControls:  true,
       touchControls:  true,
-      gyroControls:  false,
       minHeight:  200,
       minWidth:  200,
       scale:  1,
@@ -107,11 +131,9 @@ class AnimBgBase {
       ad('mouseup',  this.windowMouseUpWrapper)
     }
     if  (this.options.touchControls)  {
-      ad('touchstart',  this.windowTouchWrapper)
-      ad('touchmove',  this.windowTouchWrapper)
-    }
-    if  (this.options.gyroControls)  {
-      ad('deviceorientation',  this.windowGyroWrapper)
+      ad('touchmove' ,  this.windowMouseMoveWrapper, {passive: false})
+      ad('touchstart',  this.windowMouseDownWrapper, {passive: false})
+      ad('touchend'  ,  this.windowMouseUpWrapper  , {passive: false})
     }
   }
 
@@ -158,7 +180,8 @@ class AnimBgBase {
       left:  0,
       background:  '',
       width: '100%',
-      height: 'auto',
+      height: '100%',
+      //height: 'auto',
     })
     if  (this.options.pixelated)  {
       canvasEl.style.imageRendering  =  'pixelated'
@@ -177,9 +200,6 @@ class AnimBgBase {
     if  (isNaN(this.options.backgroundAlpha))  {
       this.options.backgroundAlpha  =  1
     }
-
-
-
   }
 
   onInitRenderer()  {
@@ -197,40 +217,25 @@ class AnimBgBase {
   }
 
   windowMouseMoveWrapper(e){
-    const  rect  =  this.getCanvasRect()
-    if  (!rect)  return  false
-    const  x  =  e.clientX  -  rect.left
-    const  y  =  e.clientY  -  rect.top
-    if  (x>=0  &&  y>=0  &&  x<=rect.width  &&  y<=rect.height)  {
-      const canvas = this.getCanvasElement()
-      this.mouse.position.x  =  (x / rect.width ) * canvas.width
-      this.mouse.position.y  =  (y / rect.height) * canvas.height
-
-      //console.log(rect.width, rect.height, rect.width / rect.height,  "---" , canvas.width, canvas.height, canvas.width / canvas.height)
+    this.onCanvas(e, (x, y) => {
+      this.mouse.setPosition({x: x, y: y})
 
       const touches = e.changedTouches;
       if (touches) {
-        this.mouse.button = 0;
-        e.preventDefault();
+        //this.mouse.button = 0
+        e.preventDefault()
       }
-
       this.mouse.sourceEvents.mousemove = e;
 
-      if  (!this.options.mouseEase)  this.triggerMouseMove(x,  y)
-    }
+      this.triggerMouseMove(x,  y)
+    })
   }
 
   windowMouseDownWrapper(e){
-    const  rect  =  this.getCanvasRect()
-    if  (!rect)  return  false
-    const  x  =  e.clientX  -  rect.left
-    const  y  =  e.clientY  -  rect.top
-    if  (x>=0  &&  y>=0  &&  x<=rect.width  &&  y<=rect.height)  {
-      const canvas = this.getCanvasElement()
-      this.mouse.position.x  =  (x / rect.width ) * canvas.width
-      this.mouse.position.y  =  (y / rect.height) * canvas.height
+    this.onCanvas(e, (x, y) => {
+      this.mouse.setPosition({x: x, y: y})
 
-      const touches = e.changedTouches;
+      const touches = e.changedTouches
       if (touches) {
         this.mouse.button = 0;
         e.preventDefault();
@@ -239,66 +244,49 @@ class AnimBgBase {
       }
       this.mouse.sourceEvents.mousedown = e;
 
-      if  (!this.options.mouseEase)  this.triggerMouseDown(x,  y)
-    }
+      this.triggerMouseDown(x,  y)
+    })
   }
 
   windowMouseUpWrapper(e){
-    const  rect  =  this.getCanvasRect()
-    if  (!rect)  return  false
-    const  x  =  e.clientX  -  rect.left
-    const  y  =  e.clientY  -  rect.top
-    if  (x>=0  &&  y>=0  &&  x<=rect.width  &&  y<=rect.height)  {
-      const canvas = this.getCanvasElement()
-      this.mouse.position.x  =  (x / rect.width ) * canvas.width
-      this.mouse.position.y  =  (y / rect.height) * canvas.height
+    this.onCanvas(e, (x, y) => {
+      this.mouse.setPosition({x: x, y: y})
 
       const touches = e.changedTouches;
       if (touches) {
-        e.preventDefault();
+        e.preventDefault()
       }
       this.mouse.button = -1;
       this.mouse.sourceEvents.mouseup = e;
 
-      if  (!this.options.mouseEase)  this.triggerMouseUp(x,  y)
-    }
+      this.triggerMouseUp(x,  y)
+    })
   }
 
-  windowTouchWrapper(e){
+  onCanvas(e, cb) {
     const  rect  =  this.getCanvasRect()
     if  (!rect)  return  false
-    if  (e.touches.length  ===  1)  {
-      const  x  =  e.touches[0].clientX  -  rect.left
-      const  y  =  e.touches[0].clientY  -  rect.top
-      if  (x>=0  &&  y>=0  &&  x<=rect.width  &&  y<=rect.height)  {
-        this.mouse.position.x  =  x
-        this.mouse.position.y  =  y
-        if  (!this.options.mouseEase)  this.triggerMouseMove(x,  y)
-      }
-    }
-  }
 
-  windowGyroWrapper(e){
-    const  rect  =  this.getCanvasRect()
-    if  (!rect)  return  false
-    const  x  =  Math.round(e.alpha  *  2)  -  rect.left
-    const  y  =  Math.round(e.beta  *  2)  -  rect.top
+    const touches = e.changedTouches;
+    const clientX = (touches ) ? touches[0].clientX : e.clientX
+    const clientY = (touches ) ? touches[0].clientY : e.clientY
+    const  x = clientX - rect.left
+    const  y = clientY - rect.top
+
     if  (x>=0  &&  y>=0  &&  x<=rect.width  &&  y<=rect.height)  {
-      this.mouse.position.x  =  x
-      this.mouse.position.y  =  y
-      if  (!this.options.mouseEase)  this.triggerMouseMove(x,  y)
+      const canvas = this.getCanvasElement()
+      const cx =  (x / rect.width ) * canvas.width
+      const cy =  (y / rect.height) * canvas.height
+
+      cb(cx, cy)
     }
   }
 
-  triggerMouseMove(x,  y, e)  {
+
+  triggerMouseMove(x,  y)  {
     if  (x  ===  undefined  &&  y  ===  undefined)  {  //  trigger  at  current  position
-      if  (this.options.mouseEase)  {
-        x  =  this.mouse.ease.x
-        y  =  this.mouse.ease.y
-      }  else  {
-        x  =  this.mouse.position.x
-        y  =  this.mouse.position.y
-      }
+      x  =  this.mouse.position.x
+      y  =  this.mouse.position.y
     }
 
     const  xNorm  =  x  /  this.width  //  0  to  1
@@ -308,13 +296,8 @@ class AnimBgBase {
 
   triggerMouseDown(x,  y, e)  {
     if  (x  ===  undefined  &&  y  ===  undefined)  {  //  trigger  at  current  position
-      if  (this.options.mouseEase)  {
-        x  =  this.mouse.ease.x
-        y  =  this.mouse.ease.y
-      }  else  {
-        x  =  this.mouse.position.x
-        y  =  this.mouse.position.y
-      }
+      x  =  this.mouse.position.x
+      y  =  this.mouse.position.y
     }
 
     const  xNorm  =  x  /  this.width  //  0  to  1
@@ -324,13 +307,8 @@ class AnimBgBase {
 
   triggerMouseUp(x,  y, e)  {
     if  (x  ===  undefined  &&  y  ===  undefined)  {  //  trigger  at  current  position
-      if  (this.options.mouseEase)  {
-        x  =  this.mouse.ease.x
-        y  =  this.mouse.ease.y
-      }  else  {
-        x  =  this.mouse.position.x
-        y  =  this.mouse.position.y
-      }
+      x  =  this.mouse.position.x
+      y  =  this.mouse.position.y
     }
 
     const  xNorm  =  x  /  this.width  //  0  to  1
@@ -346,29 +324,15 @@ class AnimBgBase {
     }  else  if  (this.options.scale)  {
       this.scale  =  this.options.scale
     }
-    this.width  =  Math.max(this.el.offsetWidth,  this.options.minWidth)
-    this.height  =  Math.max(this.el.offsetHeight,  this.options.minHeight)
+    //this.width  =  Math.max(this.el.offsetWidth,  this.options.minWidth)
+    //this.height  =  Math.max(this.el.offsetHeight,  this.options.minHeight)
+    this.width   =  this.el.offsetWidth
+    this.height  =  this.el.offsetHeight
   }
 
   initMouse()  {
-    this.mouse = {
-      position: {},
-      button: -1,
-      sourceEvents: {
-        mousemove: null,
-        mousedown: null,
-        mouseup: null,
-        mousewheel: null
-      }
-    }
-    //  Init  mouse.position.x  and  mouse.position.y
-    if  ((!this.mouse.position.x  &&  !this.mouse.position.y)  ||
-      (this.mouse.position.x  ===  this.options.minWidth/2  &&  this.mouse.position.y  ===  this.options.minHeight/2))  {
-      this.mouse.position.x  =  this.width/2
-      this.mouse.position.y  =  this.height/2
-      this.triggerMouseMove(this.mouse.position.x,  this.mouse.position.y)
-    }
-
+    this.mouse = new Mouse() 
+     
     typeof  this.onInitMouse  ===  "function"  ?  this.onInitMouse()  :  void  0
   }
 
@@ -390,16 +354,6 @@ class AnimBgBase {
   }
 
   animationLoop(time)  {
-    if  (this.options.mouseEase)  {
-      this.mouse.ease.x  =  this.mouse.ease.x  ||  this.mouse.position.x  ||  0
-      this.mouse.ease.y  =  this.mouse.ease.y  ||  this.mouse.position.y  ||  0
-      if  (Math.abs(this.mouse.ease.x-this.mouse.position.x)  +  Math.abs(this.mouse.ease.y-this.mouse.position.y)  >  0.1)  {
-        this.mouse.ease.x  +=  (this.mouse.position.x  -  this.mouse.ease.x)  *  0.05
-        this.mouse.ease.y  +=  (this.mouse.position.y  -  this.mouse.ease.y)  *  0.05
-        this.triggerMouseMove(this.mouse.ease.x,  this.mouse.ease.y)
-      }
-    }
-
     //  Only  animate  if  element  is  within  view
     if  (this.isOnScreen()  ||  this.options.forceAnimate)  {
       if  (typeof  this.onUpdate  ===  "function")  {
@@ -426,13 +380,13 @@ class AnimBgBase {
 
   destroy()  {
     const  rm  =  window.removeEventListener
-    rm('touchstart',  this.windowTouchWrapper)
-    rm('touchmove',  this.windowTouchWrapper)
+    rm('touchmove',  this.windowMouseMoveWrapper)
+    rm('touchstart',  this.windowMouseDownWrapper)
+    rm('touchend',  this.windowMouseUpWrapper)
     rm('scroll',  this.windowMouseMoveWrapper)
     rm('mousemove',  this.windowMouseMoveWrapper)
     rm('mousedown',  this.windowMouseDownWrapper)
     rm('mouseup',  this.windowMouseUpWrapper)
-    rm('deviceorientation',  this.windowGyroWrapper)
     rm('resize',  this.resize)
     window.cancelAnimationFrame(this.req)
 
@@ -445,4 +399,5 @@ class AnimBgBase {
   }
 }
 
+AnimBg.Mouse = Mouse
 export default AnimBgBase

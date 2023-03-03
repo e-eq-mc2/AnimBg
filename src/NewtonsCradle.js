@@ -7,15 +7,6 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const nc = new NewtonsCradle(options)
   }
 
-  constructor(options) {
-    const opt = Object.assign({
-      //mouseControls: false,
-      //touchControls: false,
-      gyroControls:  false,
-    }, options)
-    super(opt)
-  }
-
   onInitRenderer() {
     // create engine
     const engine = Matter.Engine.create({
@@ -35,7 +26,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         width: this.width,
         height: this.height,
         wireframes: false,
-        //showDebug: true,
+        showStat: true,
       }
     })
 
@@ -48,31 +39,23 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     this.fillColors = ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',]
     this.textColors = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699']
 
-    const world   = engine.world
-    const newtonsCradles = this.options.newtonsCradles
+    const world = engine.world
+    const optsList = this.options.newtonsCradles
 
-    for(let i=0; i < newtonsCradles.length; ++i) {
-      const options = newtonsCradles[i]
-      options.label = `line${i}`
+    for(let i=0; i < optsList.length; ++i) {
+      const opts = optsList[i]
+      opts.label = `line${i}`
 
-      const nc = this.createNewtonsCradle(options)
+      const nc = this.createNewtonsCradle(opts)
       Matter.Composite.add(world, nc)
-    }
 
-   // fit the render viewport to the scene
-    //Matter.Render.lookAt(this.render, {
-    //    min: { x: 0, y: 0 },
-    //    max: { x: 800, y: 600 }
-    //});
+      this.setTextStyle(opts)
+    }
   }
 
   onInitMouse() {
     const engine = this.render.engine
     const world  = engine.world
-
-    // add mouse control
-    //const mouse = Matter.Mouse.create(this.render.canvas)
-    //Matter.Mouse.unsetWheel(mouse)
 
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: this.mouse,
@@ -80,14 +63,22 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         stiffness: 0.2,
         render: {
           visible: false
-        }
-      }
+        },
+      },
+      collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
     })
     Matter.Composite.add(world, mouseConstraint)
 
+    Matter.Events.on(mouseConstraint, 'mousedown', (event) => {
+      if ( mouseConstraint.body ) return
+      mouseConstraint.collisionFilter.category = 0x0000 
+    })
+    Matter.Events.on(mouseConstraint, 'mouseup', (event) => {
+      mouseConstraint.collisionFilter.category = 0x0001
+    })
+
     //Add event with 'mousemove'
-    const ctx = this
-    Matter.Events.on(mouseConstraint, 'mousemove', function (event) {
+    Matter.Events.on(mouseConstraint, 'mousemove', (event) => {
       const mouse = event.mouse
       const foundBodies = Matter.Query.point(
         Matter.Composite.allBodies(engine.world), 
@@ -98,15 +89,14 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
       const fb = foundBodies[0]
       const allBodies = Matter.Composite.allBodies(engine.world)
-      if ( !ctx.currentColor || allBodies.every( e => e.render.fillStyle === fb.render.fillStyle ) ) {
-        console.log(fb, ctx.currentColor)
-        const colors = ctx.fillColors.filter( e => e !== fb.render.fillStyle)
-        ctx.currentColor = choose( colors )
+      if ( !this.currentColor || allBodies.every( e => e.render.fillStyle === fb.render.fillStyle ) ) {
+        const colors = this.fillColors.filter( e => e !== fb.render.fillStyle)
+        this.currentColor = choose( colors )
       }
 
-      fb.render.fillStyle = ctx.currentColor
+      fb.render.fillStyle = this.currentColor
     })
-   }
+  }
 
   getCanvasElement()  {
     return this.render.canvas
@@ -115,11 +105,10 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   onUpdate (time) {
     Matter.Render.update(this.render, time)
 
-
-    const newtonsCradles = this.options.newtonsCradles
-    for(let i=0; i < newtonsCradles.length; ++i) {
-      const options = newtonsCradles[i]
-      this.renderText(options)
+    const optNC = this.options.newtonsCradles
+    for(let i=0; i < optNC.length; ++i) {
+      const opt = optNC[i]
+      this.renderText(opt)
     }
 
     if( this.runner.enabled ) {
@@ -128,46 +117,40 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   }
 
   onResize() {
-    //this.render.bounds.max.x   = this.width
-    //this.render.bounds.max.y   = this.height
-    //this.render.options.width  = this.width
-    //this.render.options.height = this.height
-    //this.render.canvas.width   = this.width
-    //this.render.canvas.height  = this.height
-    //Matter.Render.setPixelRatio(this.render, window.devicePixelRatio); // added this
+    const render = this.render
+    const ow = render.canvas.width
+    const oh = render.canvas.height
+    const oa = oh  / ow
+
+    const rect =  this.getCanvasRect()
+    const ca = rect.height / rect.width
+    const bw =  ow
+    const bh =  oh * ( ca / oa )
+
+    render.options.hasBounds = true
+    render.bounds.min.x = 0 
+    render.bounds.min.y = 0 
+    render.bounds.max.x = bw
+    render.bounds.max.y = bh
+
+    Matter.Mouse.setScale(this.mouse, {x: bw / ow, y: bh / oh});
   }
 
-  onMouseMove(xNorm, yNorm) {
-  }
-
-  createNewtonsCradle(options) {
-    const {baseX, baseY, size, length, label, text, font} = options
+  createNewtonsCradle({baseX, baseY, size, length, label, text, font}) {
 
     const newtonsCradle = Matter.Composite.create()
-
-    options.textColor  = []
-    options.textOffset = []
-    const num = options.text.length
-    for (let i = 0; i < num; i++) {
-      const tc = choose(this.textColors)
-      options.textColor.push(tc)
-
-      const char = text[i]
-      const csz  = getCharSize(char, font)
-
-      options.textOffset.push({x: - csz.x * 0.5, y: csz.y * 0.25})
-
-      //const separation = 1.9
+    for (let i = 0; i < text.length; i++) {
       const separation = 1.95
       const fc = this.fillColors[0]
       const x  = baseX + i * (size * separation)
       const y  = baseY + length
-      const circle = Matter.Bodies.circle(
+      const body = Matter.Bodies.circle(
         x,
         y,
         size,
         { 
           inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005, label: label,
+          collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
           render: {
             fillStyle: fc,
             strokeStyle: '#a6a6a6',
@@ -176,13 +159,14 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         },
       )
 
-      const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: circle, 
+      const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: body, 
         render:{
           strokeStyle: '#a6a6a6',
           lineWidth: 3,
-      }})
+        }
+      })
 
-      Matter.Composite.addBody(newtonsCradle, circle)
+      Matter.Composite.addBody(newtonsCradle, body)
       Matter.Composite.addConstraint(newtonsCradle, constraint)
     }
 
@@ -191,7 +175,19 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
     Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
     return newtonsCradle
+  }
 
+  setTextStyle(options) {
+    options.textColor  = []
+    options.textOffset = []
+    for (let i = 0; i < options.text.length; i++) {
+      const tc = choose(this.textColors)
+      options.textColor.push(tc)
+
+      const char = options.text[i]
+      const sz   = getCharSize(char, options.font)
+      options.textOffset.push({x: - sz.x * 0.5, y: sz.y * 0.25})
+    }
   }
 
   renderText(options) {
@@ -201,6 +197,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const context = this.render.context
     const bodies  = this.getBodiesByLabel(label, engine)
 
+    Matter.Render.startViewTransform(this.render);
     for(let i = 0; i < bodies.length; ++i) {
       const char = text[i]
       if ( !char ) break 
@@ -216,27 +213,12 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       context.fillStyle = color
       context.fillText(char, x, y)
     }
+    Matter.Render.endViewTransform(this.render)
   }
 
   getBodiesByLabel(label, engine) {
     return Matter.Composite.allBodies(engine.world).filter(body => body.label === label)
   }
-}
-
-Matter.Mouse.unsetWheel = function(mouse) {
-  const element = mouse.element
-  const  rm     =  element.removeEventListener
-
-  //element.removeEventListener('mousemove', mouse.mousemove);
-  //element.removeEventListener('mousedown', mouse.mousedown);
-  //element.removeEventListener('mouseup', mouse.mouseup);
-
-  element.removeEventListener('mousewheel', mouse.mousewheel);
-  //element.removeEventListener('DOMMouseScroll', mouse.mousewheel);
-
-  //element.removeEventListener('touchmove', mouse.mousemove);
-  //element.removeEventListener('touchstart', mouse.mousedown);
-  //element.removeEventListener('touchend', mouse.mouseup);
 }
 
 Matter.Render.update = function(render, time) {
