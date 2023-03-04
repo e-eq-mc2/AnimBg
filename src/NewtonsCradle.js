@@ -15,27 +15,6 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       velocityIterations: 20,
     })
 
-    // create renderer
-    // https://github.com/liabru/matter-js/wiki/Rendering
-    this.render = Matter.Render.create({
-      element: this.el,
-      engine: engine,
-      options: {
-        background: '#ffffff',
-        //wireframeBackground: '#ffffff',
-        width: this.width,
-        height: this.height,
-        wireframes: false,
-        showStat: true,
-      }
-    })
-
-    // create runner
-    this.runner = Matter.Runner.create({
-      //isFixed: true,
-      fps: 90,
-    })
-
     this.fillColors = ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',]
     this.textColors = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699']
 
@@ -51,7 +30,59 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
       this.setTextStyle(opts)
     }
+
+
+    const bounds = this.findBounds( Matter.Composite.allBodies(engine.world) )
+
+    // create renderer
+    // https://github.com/liabru/matter-js/wiki/Rendering
+    this.render = Matter.Render.create({
+      element: this.el,
+      engine: engine,
+      options: {
+        background: '#ffffff',
+        //wireframeBackground: '#ffffff',
+        width:  bounds.max.x * 1.2,
+        height: bounds.max.y * 1.2,
+        wireframes: false,
+        showStat: true,
+      }
+    })
+
+    // create runner
+    this.runner = Matter.Runner.create({
+      //isFixed: true,
+      fps: 90,
+    })
   }
+
+  findBounds (bodies) {
+    // find bounds of all objects
+    const bounds = {
+      min: { x: Infinity, y: Infinity },
+      max: { x: -Infinity, y: -Infinity }
+    }
+
+    for (const body of bodies) {
+      console.log(body.bounds)
+      const min = body.bounds.min
+      const max = body.bounds.max
+
+      if (min.x < bounds.min.x)
+        bounds.min.x = min.x
+
+      if (max.x > bounds.max.x)
+        bounds.max.x = max.x;
+
+      if (min.y < bounds.min.y)
+        bounds.min.y = min.y;
+
+      if (max.y > bounds.max.y)
+        bounds.max.y = max.y;
+    }
+
+    return bounds
+  } 
 
   onInitMouse() {
     const engine = this.render.engine
@@ -105,10 +136,10 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   onUpdate (time) {
     Matter.Render.update(this.render, time)
 
-    const optNC = this.options.newtonsCradles
-    for(let i=0; i < optNC.length; ++i) {
-      const opt = optNC[i]
-      this.renderText(opt)
+    const optsList = this.options.newtonsCradles
+    for(let i=0; i < optsList.length; ++i) {
+      const opts = optsList[i]
+      this.renderText(opts)
     }
 
     if( this.runner.enabled ) {
@@ -118,14 +149,34 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
   onResize() {
     const render = this.render
+    const rect =  this.getCanvasRect()
+
     const ow = render.canvas.width
     const oh = render.canvas.height
-    const oa = oh  / ow
+    const oHpW = oh  / ow
+    const oWpH = ow / oh
 
-    const rect =  this.getCanvasRect()
-    const ca = rect.height / rect.width
-    const bw =  ow
-    const bh =  oh * ( ca / oa )
+    const cw = rect.width
+    const ch = rect.height
+    const cHpW = ch / cw
+    const cWpH = cw / ch
+
+    let bw, bh
+    if ( cHpW > oHpW ) {
+     // +--------+        +----+
+     // |        |   ->   |    |
+     // +--------+        +----+
+     const scaleH = cHpW / oHpW
+      bw = ow
+      bh = oh * scaleH
+    } else {
+     // +----+        +--------+
+     // |    |   ->   |        |
+     // +----+        +--------+
+      const scaleW = cWpH / oWpH
+      bw = ow * scaleW
+      bh = oh
+    }
 
     render.options.hasBounds = true
     render.bounds.min.x = 0 
@@ -170,10 +221,10 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       Matter.Composite.addConstraint(newtonsCradle, constraint)
     }
 
-    const angle = 160
-    const dx = Math.cos( angle * Math.PI / 180 ) *   length
-    const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
-    Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
+    //const angle = 160
+    //const dx = Math.cos( angle * Math.PI / 180 ) *   length
+    //const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
+    //Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
     return newtonsCradle
   }
 
