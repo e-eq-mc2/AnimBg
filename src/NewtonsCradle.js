@@ -31,23 +31,26 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       this.setTextStyle(opts)
     }
 
-
-    const bounds = this.findBounds( Matter.Composite.allBodies(engine.world) )
-
     // create renderer
     // https://github.com/liabru/matter-js/wiki/Rendering
+    const bounds = this.findBounds( Matter.Composite.allBodies(engine.world) )
     this.render = Matter.Render.create({
       element: this.el,
       engine: engine,
       options: {
         background: '#ffffff',
         //wireframeBackground: '#ffffff',
-        width:  bounds.max.x * 1.2,
-        height: bounds.max.y * 1.2,
+        width:  bounds.max.x * 1.1,
+        height: bounds.max.y * 1.1,
+        //pixelRatio: 'auto',
         wireframes: false,
-        showStat: true,
+        //showPerformance: true,
       }
     })
+
+    this.render.options.pixelRatio = window.devicePixelRatio
+    this.render.canvas.width  *=  this.render.options.pixelRatio
+    this.render.canvas.height *=  this.render.options.pixelRatio
 
     // create runner
     this.runner = Matter.Runner.create({
@@ -116,11 +119,18 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         mouse.position
       )
 
+      //const r = this.render
+      //const m = this.mouse
+      //console.log(r.options.pixelRatio, r.options.width, r.bounds.max.x, r.canvas.width, m.absolute.x, m.position.x)
+
       if ( foundBodies.length === 0 ) return
 
       const fb = foundBodies[0]
       const allBodies = Matter.Composite.allBodies(engine.world)
-      if ( !this.currentColor || allBodies.every( e => e.render.fillStyle === fb.render.fillStyle ) ) {
+      if ( 
+        ! this.currentColor ||
+        allBodies.every( e => e.render.fillStyle === fb.render.fillStyle ) 
+      ) {
         const colors = this.fillColors.filter( e => e !== fb.render.fillStyle)
         this.currentColor = choose( colors )
       }
@@ -151,9 +161,10 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const render = this.render
     const rect =  this.getCanvasRect()
 
-    const ow = render.canvas.width
-    const oh = render.canvas.height
-    const oHpW = oh  / ow
+    const ow = render.options.width  
+    const oh = render.options.height
+
+    const oHpW = oh / ow
     const oWpH = ow / oh
 
     const cw = rect.width
@@ -184,7 +195,8 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     render.bounds.max.x = bw
     render.bounds.max.y = bh
 
-    Matter.Mouse.setScale(this.mouse, {x: bw / ow, y: bh / oh});
+    const pr = render.options.pixelRatio
+    Matter.Mouse.setScale(this.mouse, {x: (bw / ow) / pr, y: (bh / oh) / pr});
   }
 
   createNewtonsCradle({baseX, baseY, size, length, label, text, font}) {
@@ -221,10 +233,11 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       Matter.Composite.addConstraint(newtonsCradle, constraint)
     }
 
-    //const angle = 160
-    //const dx = Math.cos( angle * Math.PI / 180 ) *   length
-    //const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
-    //Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
+    // swing
+    const angle = 160
+    const dx = Math.cos( angle * Math.PI / 180 ) *   length
+    const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
+    Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
     return newtonsCradle
   }
 

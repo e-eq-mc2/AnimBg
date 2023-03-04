@@ -227,7 +227,7 @@ class AnimBgBase {
       }
       this.mouse.sourceEvents.mousemove = e;
 
-      this.triggerMouseMove(x,  y)
+      this.triggerMouseMove(x,  y, e)
     })
   }
 
@@ -282,8 +282,7 @@ class AnimBgBase {
     }
   }
 
-
-  triggerMouseMove(x,  y)  {
+  triggerMouseMove(x,  y, e)  {
     if  (x  ===  undefined  &&  y  ===  undefined)  {  //  trigger  at  current  position
       x  =  this.mouse.position.x
       y  =  this.mouse.position.y
