@@ -8,15 +8,11 @@ Animation Background for webpages.
 ## How to use
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/AnimBg/dist/animbg.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/animbg/dist/animbg.min.js"></script>
 <script> 
 AnimBg.NewtonsCradle.run({
   el: "#animation-bg",
-  minHeight: 200.00,
-  minWidth: 200.00,
-  scale: 1.00,
-  scaleMobile: 1.00,
-  backgroundColor: 0x00ffff,
+  background: '#ffffff',
   newtonsCradles: [
     {
       baseX: 150, baseY: 20, size: 50, length: 300,

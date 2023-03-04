@@ -1,1 +1,1 @@
-import {AnimBg} from './newtonsCradle.js'
+import {AnimBg} from './newtonscradle.js'

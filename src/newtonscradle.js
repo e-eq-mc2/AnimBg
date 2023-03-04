@@ -15,7 +15,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       velocityIterations: 20,
     })
 
-    this.fillColors = ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',]
+    this.bodyColors = ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',]
     this.textColors = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699']
 
     const world = engine.world
@@ -23,28 +23,23 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
     for(let i=0; i < optsList.length; ++i) {
       const opts = optsList[i]
-      opts.label = `line${i}`
 
       const nc = this.createNewtonsCradle(opts)
       Matter.Composite.add(world, nc)
-
-      this.setTextStyle(opts)
     }
 
     // create renderer
     // https://github.com/liabru/matter-js/wiki/Rendering
     const bounds = this.findBounds( Matter.Composite.allBodies(engine.world) )
+    const boundsScale = {x: 1.2, y: 1.2}
     this.render = Matter.Render.create({
       element: this.el,
       engine: engine,
       options: {
-        background: '#ffffff',
-        //wireframeBackground: '#ffffff',
-        width:  bounds.max.x * 1.1,
-        height: bounds.max.y * 1.1,
-        //pixelRatio: 'auto',
+        background: '',
+        width:  bounds.max.x * boundsScale.x,
+        height: bounds.max.y * boundsScale.y,
         wireframes: false,
-        //showPerformance: true,
       }
     })
 
@@ -67,7 +62,6 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     }
 
     for (const body of bodies) {
-      console.log(body.bounds)
       const min = body.bounds.min
       const max = body.bounds.max
 
@@ -127,15 +121,14 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
       const fb = foundBodies[0]
       const allBodies = Matter.Composite.allBodies(engine.world)
-      if ( 
-        ! this.currentColor ||
-        allBodies.every( e => e.render.fillStyle === fb.render.fillStyle ) 
-      ) {
-        const colors = this.fillColors.filter( e => e !== fb.render.fillStyle)
-        this.currentColor = choose( colors )
+      if ( ! this.currentColor || allBodies.every(b => b.render.fillStyle === fb.render.fillStyle) ) {
+        const bodyColors = this.bodyColors.filter(b => b !== fb.render.fillStyle)
+        this.currentColor = choose( bodyColors )
       }
-
       fb.render.fillStyle = this.currentColor
+
+      const textColors = this.textColors.filter( c => c !== fb.charData.color )
+      fb.charData.color = choose( textColors )
     })
   }
 
@@ -146,11 +139,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   onUpdate (time) {
     Matter.Render.update(this.render, time)
 
-    const optsList = this.options.newtonsCradles
-    for(let i=0; i < optsList.length; ++i) {
-      const opts = optsList[i]
-      this.renderText(opts)
-    }
+    this.renderText()
 
     if( this.runner.enabled ) {
       Matter.Runner.tick(this.runner, this.render.engine, time)
@@ -199,12 +188,13 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     Matter.Mouse.setScale(this.mouse, {x: (bw / ow) / pr, y: (bh / oh) / pr});
   }
 
-  createNewtonsCradle({baseX, baseY, size, length, label, text, font}) {
-
+  createNewtonsCradle({baseX, baseY, size, length, text, font}) {
     const newtonsCradle = Matter.Composite.create()
+
     for (let i = 0; i < text.length; i++) {
+      // ---- body -----
       const separation = 1.95
-      const fc = this.fillColors[0]
+      const bodyColor = this.bodyColors[0]
       const x  = baseX + i * (size * separation)
       const y  = baseY + length
       const body = Matter.Bodies.circle(
@@ -212,10 +202,10 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         y,
         size,
         { 
-          inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005, label: label,
+          inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005,
           collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
           render: {
-            fillStyle: fc,
+            fillStyle: bodyColor,
             strokeStyle: '#a6a6a6',
             lineWidth: 8,
           },
@@ -228,9 +218,18 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
           lineWidth: 3,
         }
       })
-
       Matter.Composite.addBody(newtonsCradle, body)
       Matter.Composite.addConstraint(newtonsCradle, constraint)
+
+      // ---- char ----
+      const char  = text[i]
+      const textColor = choose(this.textColors)
+
+      const charSize = getCharSize(char, font)
+      const offset = {x: - charSize.x / 2, y: charSize.y / 4}
+      const charData = {char: char, offset: offset, color: textColor, font: font}
+      // inject 
+      body.charData = charData
     }
 
     // swing
@@ -241,37 +240,22 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     return newtonsCradle
   }
 
-  setTextStyle(options) {
-    options.textColor  = []
-    options.textOffset = []
-    for (let i = 0; i < options.text.length; i++) {
-      const tc = choose(this.textColors)
-      options.textColor.push(tc)
-
-      const char = options.text[i]
-      const sz   = getCharSize(char, options.font)
-      options.textOffset.push({x: - sz.x * 0.5, y: sz.y * 0.25})
-    }
-  }
-
-  renderText(options) {
-    const {label, text, font, textColor, textOffset} = options
-
+  renderText() {
     const engine  = this.render.engine
     const context = this.render.context
-    const bodies  = this.getBodiesByLabel(label, engine)
+    const bodies  = Matter.Composite.allBodies(engine.world)
 
     Matter.Render.startViewTransform(this.render);
-    for(let i = 0; i < bodies.length; ++i) {
-      const char = text[i]
-      if ( !char ) break 
+    for( const body of bodies ) {
+      const charData = body.charData
 
-      const body  = bodies[i]
-      const color = textColor[i]
-      const off   = textOffset[i]
+      const char   = charData.char
+      const offset = charData.offset
+      const color  = charData.color
+      const font   = charData.font
 
-      const x = body.position.x + off.x
-      const y = body.position.y + off.y
+      const x = body.position.x + offset.x
+      const y = body.position.y + offset.y
 
       context.font = font
       context.fillStyle = color

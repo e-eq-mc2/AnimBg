@@ -27,30 +27,6 @@ const  color2Hex  =  function(color)  {
 }
 
 
-class Mouse {
-  constructor() {
-      this.position     = {x: 0, y: 0}
-      this.scale        = {x: 0, y: 0}
-      this.absolute     = {x: 0, y: 0}
-      this.offset       = {x: 0, y: 0}
-      this.button       = -1
-      this.sourceEvents = {
-        mousemove: null,
-        mousedown: null,
-        mouseup: null,
-        mousewheel: null,
-      }
-  }
-
-  setPosition(position) {
-    this.absolute.x = position.x
-    this.absolute.y = position.y
-    this.position.x = this.absolute.x * this.scale.x + this.offset.x
-    this.position.y = this.absolute.y * this.scale.y + this.offset.y
-  }
-
-}
-
 //  ----  ----------------  ----
 
 class AnimBgBase {
@@ -69,10 +45,6 @@ class AnimBgBase {
     this.options  =  Object.assign({
       mouseControls:  true,
       touchControls:  true,
-      minHeight:  200,
-      minWidth:  200,
-      scale:  1,
-      scaleMobile:  1,
     },  defaultOptions)
 
     if  (userOptions  instanceof  HTMLElement  ||  typeof  userOptions  ===  'string')  {
@@ -315,16 +287,7 @@ class AnimBgBase {
     typeof  this.onMouseUp  ===  "function"  ?  this.onMouseUp(xNorm,  yNorm, e)  :  void  0
   }
 
-
   setSize()  {
-    this.scale  ||  (this.scale  =  1)
-    if  (mobileCheck()  &&  this.options.scaleMobile)  {
-      this.scale  =  this.options.scaleMobile
-    }  else  if  (this.options.scale)  {
-      this.scale  =  this.options.scale
-    }
-    //this.width  =  Math.max(this.el.offsetWidth,  this.options.minWidth)
-    //this.height  =  Math.max(this.el.offsetHeight,  this.options.minHeight)
     this.width   =  this.el.offsetWidth
     this.height  =  this.el.offsetHeight
   }
@@ -398,5 +361,30 @@ class AnimBgBase {
   }
 }
 
+class Mouse {
+  constructor() {
+      this.position     = {x: 0, y: 0}
+      this.scale        = {x: 0, y: 0}
+      this.absolute     = {x: 0, y: 0}
+      this.offset       = {x: 0, y: 0}
+      this.button       = -1
+      this.sourceEvents = {
+        mousemove: null,
+        mousedown: null,
+        mouseup: null,
+        mousewheel: null,
+      }
+  }
+
+  setPosition(position) {
+    this.absolute.x = position.x
+    this.absolute.y = position.y
+    this.position.x = this.absolute.x * this.scale.x + this.offset.x
+    this.position.y = this.absolute.y * this.scale.y + this.offset.y
+  }
+
+}
+
 AnimBg.Mouse = Mouse
+
 export default AnimBgBase
