@@ -7,6 +7,10 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const nc = new NewtonsCradle(options)
   }
 
+  constructor(options) {
+    super(options)
+  }
+
   onInitRenderer() {
     // create engine
     const engine = Matter.Engine.create({
@@ -15,14 +19,15 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       velocityIterations: 20,
     })
 
-    this.bodyColors = ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',]
-    this.textColors = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699']
-
     const world = engine.world
     const optsList = this.options.newtonsCradles
 
     for(let i=0; i < optsList.length; ++i) {
       const opts = optsList[i]
+
+      // inject
+      opts.bodyColors = this.options.bodyColors
+      opts.textColors = this.options.textColors
 
       const nc = this.createNewtonsCradle(opts)
       Matter.Composite.add(world, nc)
@@ -31,7 +36,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     // create renderer
     // https://github.com/liabru/matter-js/wiki/Rendering
     const bounds = this.findBounds( Matter.Composite.allBodies(engine.world) )
-    const boundsScale = {x: 1.2, y: 1.2}
+    const boundsScale = this.options.boundsScale //|| {x: 1.1, y: 1.1}
     this.render = Matter.Render.create({
       element: this.el,
       engine: engine,
@@ -113,21 +118,17 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
         mouse.position
       )
 
-      //const r = this.render
-      //const m = this.mouse
-      //console.log(r.options.pixelRatio, r.options.width, r.bounds.max.x, r.canvas.width, m.absolute.x, m.position.x)
-
       if ( foundBodies.length === 0 ) return
 
       const fb = foundBodies[0]
       const allBodies = Matter.Composite.allBodies(engine.world)
-      if ( ! this.currentColor || allBodies.every(b => b.render.fillStyle === fb.render.fillStyle) ) {
-        const bodyColors = this.bodyColors.filter(b => b !== fb.render.fillStyle)
-        this.currentColor = choose( bodyColors )
+      if ( ! this.currentBodyColor || allBodies.every(b => b.render.fillStyle === fb.render.fillStyle) ) {
+        const bodyColors = this.options.bodyColors.filter(b => b !== fb.render.fillStyle)
+        this.currentBodyColor = choose( bodyColors )
       }
-      fb.render.fillStyle = this.currentColor
+      fb.render.fillStyle = this.currentBodyColor
 
-      const textColors = this.textColors.filter( c => c !== fb.charData.color )
+      const textColors = this.options.textColors.filter( c => c !== fb.charData.color )
       fb.charData.color = choose( textColors )
     })
   }
@@ -188,15 +189,24 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     Matter.Mouse.setScale(this.mouse, {x: (bw / ow) / pr, y: (bh / oh) / pr});
   }
 
-  createNewtonsCradle({baseX, baseY, size, length, text, font}) {
-    const newtonsCradle = Matter.Composite.create()
+  createNewtonsCradle(options) {
+    const {
+      baseX, baseY, size, length,
+      bodyColor,
+      bodyLineWidth      , bodyLineColor,
+      constraintLineWidth, constraintLineColor,
+      text, font,
+      bodyColors, textColors,
+    } = options
 
+
+    const newtonsCradle = Matter.Composite.create()
     for (let i = 0; i < text.length; i++) {
       // ---- body -----
       const separation = 1.95
-      const bodyColor = this.bodyColors[0]
       const x  = baseX + i * (size * separation)
       const y  = baseY + length
+      const bodyColor = choose(bodyColors)
       const body = Matter.Bodies.circle(
         x,
         y,
@@ -206,16 +216,16 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
           collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
           render: {
             fillStyle: bodyColor,
-            strokeStyle: '#a6a6a6',
-            lineWidth: 8,
+            strokeStyle: bodyLineWidth,
+            lineWidth: bodyLineWidth,
           },
         },
       )
 
       const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: body, 
         render:{
-          strokeStyle: '#a6a6a6',
-          lineWidth: 3,
+          strokeStyle: constraintLineColor,
+          lineWidth: constraintLineWidth,
         }
       })
       Matter.Composite.addBody(newtonsCradle, body)
@@ -223,7 +233,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
       // ---- char ----
       const char  = text[i]
-      const textColor = choose(this.textColors)
+      const textColor = choose(textColors)
 
       const charSize = getCharSize(char, font)
       const offset = {x: - charSize.x / 2, y: charSize.y / 4}
