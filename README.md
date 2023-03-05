@@ -12,15 +12,21 @@ Animation Background for webpages.
 <script> 
 AnimBg.NewtonsCradle.run({
   el: "#animation-bg",
-  background: '#ffffff',
+  boundsScale: {x: 1.05, y: 1.05},
+  bodyColors: ['#999999',  '#ffffff', '#000000', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
+  textColors: ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#00cc66', '#ff6699'],
   newtonsCradles: [
     {
-      baseX: 150, baseY: 20, size: 50, length: 300,
-      text: "Animation", font: '800 80px Arial',
+      baseX: 150, baseY: 20, size: 40, length: 300,
+      bodyLineWidth:       8, bodyLineColor:       '#a6a6a6',
+      constraintLineWidth: 3, constraintLineColor: '#a6a6a6',
+      text: "Animation", font: '800 60px Arial',
     },
     {
-      baseX: 350, baseY: 500, size: 35, length: 200,
-      text: "Background", font: '800 60px Arial',
+      baseX: 350, baseY: 500, size: 30, length: 200,
+      bodyLineWidth:       8, bodyLineColor:       '#a6a6a6',
+      constraintLineWidth: 3, constraintLineColor: '#a6a6a6',
+      text: "Background", font: '800 50px Arial',
     },
   ]
 })
