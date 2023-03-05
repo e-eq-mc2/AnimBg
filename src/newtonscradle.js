@@ -59,6 +59,68 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     })
   }
 
+  createNewtonsCradle(options) {
+    const {
+      baseX, baseY, size, length,
+      bodyColor,
+      bodyLineWidth      , bodyLineColor,
+      constraintLineWidth, constraintLineColor,
+      text, font,
+      bodyColors, textColors,
+    } = options
+
+    const newtonsCradle = Matter.Composite.create()
+    for (let i = 0; i < text.length; i++) {
+      // ---- body -----
+      const separation = 1.95
+      const x  = baseX + i * (size * separation)
+      const y  = baseY + length
+      const bodyColor = bodyColors[0]
+      const body = Matter.Bodies.circle(
+        x,
+        y,
+        size,
+        { 
+          inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005,
+          collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
+          render: {
+            fillStyle: bodyColor,
+            strokeStyle: bodyLineColor,
+            lineWidth: bodyLineWidth,
+          },
+        },
+      )
+
+      const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: body, 
+        render:{
+          strokeStyle: constraintLineColor,
+          lineWidth: constraintLineWidth,
+        }
+      })
+      Matter.Composite.addBody(newtonsCradle, body)
+      Matter.Composite.addConstraint(newtonsCradle, constraint)
+
+      // ---- char ----
+      const char  = text[i]
+      const textColor = choose(textColors)
+
+      const charSize = getCharSize(char, font)
+      const offset = {x: - charSize.x / 2, y: charSize.y / 4}
+      const charData = {char: char, offset: offset, color: textColor, font: font}
+      // inject 
+      body.charData = charData
+    }
+
+    // swing
+    const angle = 160
+    const dx = Math.cos( angle * Math.PI / 180 ) *   length
+    const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
+    Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
+    return newtonsCradle
+  }
+
+
+
   findBounds (bodies) {
     // find bounds of all objects
     const bounds = {
@@ -189,66 +251,6 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     Matter.Mouse.setScale(this.mouse, {x: (bw / ow) / pr, y: (bh / oh) / pr});
   }
 
-  createNewtonsCradle(options) {
-    const {
-      baseX, baseY, size, length,
-      bodyColor,
-      bodyLineWidth      , bodyLineColor,
-      constraintLineWidth, constraintLineColor,
-      text, font,
-      bodyColors, textColors,
-    } = options
-
-
-    const newtonsCradle = Matter.Composite.create()
-    for (let i = 0; i < text.length; i++) {
-      // ---- body -----
-      const separation = 1.95
-      const x  = baseX + i * (size * separation)
-      const y  = baseY + length
-      const bodyColor = choose(bodyColors)
-      const body = Matter.Bodies.circle(
-        x,
-        y,
-        size,
-        { 
-          inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005,
-          collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
-          render: {
-            fillStyle: bodyColor,
-            strokeStyle: bodyLineColor,
-            lineWidth: bodyLineWidth,
-          },
-        },
-      )
-
-      const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: body, 
-        render:{
-          strokeStyle: constraintLineColor,
-          lineWidth: constraintLineWidth,
-        }
-      })
-      Matter.Composite.addBody(newtonsCradle, body)
-      Matter.Composite.addConstraint(newtonsCradle, constraint)
-
-      // ---- char ----
-      const char  = text[i]
-      const textColor = choose(textColors)
-
-      const charSize = getCharSize(char, font)
-      const offset = {x: - charSize.x / 2, y: charSize.y / 4}
-      const charData = {char: char, offset: offset, color: textColor, font: font}
-      // inject 
-      body.charData = charData
-    }
-
-    // swing
-    const angle = 160
-    const dx = Math.cos( angle * Math.PI / 180 ) *   length
-    const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
-    Matter.Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
-    return newtonsCradle
-  }
 
   renderText() {
     const engine  = this.render.engine
