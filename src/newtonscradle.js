@@ -128,8 +128,8 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       }
       fb.render.fillStyle = this.currentBodyColor
 
-      const textColors = this.options.textColors.filter( c => c !== fb.charData.color )
-      fb.charData.color = choose( textColors )
+      //const textColors = this.options.textColors.filter( c => c !== fb.charData.color )
+      //fb.charData.color = choose( textColors )
     })
   }
 
@@ -216,7 +216,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
           collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
           render: {
             fillStyle: bodyColor,
-            strokeStyle: bodyLineWidth,
+            strokeStyle: bodyLineColor,
             lineWidth: bodyLineWidth,
           },
         },
