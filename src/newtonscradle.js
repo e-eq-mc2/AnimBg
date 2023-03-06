@@ -151,30 +151,11 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   onInitMouse() {
     const engine = this.render.engine
     const world  = engine.world
+    const mouse  = this.mouse
 
-    const mouseConstraint = Matter.MouseConstraint.create(engine, {
-      mouse: this.mouse,
-      constraint: {
-        stiffness: 0.2,
-        render: {
-          visible: false
-        },
-      },
-      collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
-    })
-    Matter.Composite.add(world, mouseConstraint)
+    Matter.Events.on(engine, 'beforeUpdate', (e) => {
+      if ( ! ( mouse.sourceEvents.mousedown && mouse.button == 0 ) ) return
 
-    Matter.Events.on(mouseConstraint, 'mousedown', (event) => {
-      if ( mouseConstraint.body ) return
-      mouseConstraint.collisionFilter.category = 0x0000 
-    })
-    Matter.Events.on(mouseConstraint, 'mouseup', (event) => {
-      mouseConstraint.collisionFilter.category = 0x0001
-    })
-
-    //Add event with 'mousemove'
-    Matter.Events.on(mouseConstraint, 'mousemove', (event) => {
-      const mouse = event.mouse
       const foundBodies = Matter.Query.point(
         Matter.Composite.allBodies(engine.world), 
         mouse.position
