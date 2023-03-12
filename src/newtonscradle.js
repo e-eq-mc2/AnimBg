@@ -119,8 +119,6 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     return newtonsCradle
   }
 
-
-
   findBounds (bodies) {
     // find bounds of all objects
     const bounds = {
@@ -154,7 +152,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const mouse  = this.mouse
 
     Matter.Events.on(engine, 'beforeUpdate', (e) => {
-      if ( ! ( mouse.sourceEvents.mousedown && mouse.button == 0 ) ) return
+      //if ( ! ( mouse.sourceEvents.mousedown && mouse.button == 0 ) ) return
 
       const foundBodies = Matter.Query.point(
         Matter.Composite.allBodies(engine.world), 

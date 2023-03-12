@@ -98,14 +98,14 @@ class AnimBgBase {
     //  Add  event  listeners  on  window,  because  this  element  may  be  below  other  elements,  which  would  block  the  element's  own  mousemove  event
     if  (this.options.mouseControls)  {
       //ad('scroll',  this.windowMouseMoveWrapper)
-      //ad('mousemove',  this.windowMouseMoveWrapper)
+      ad('mousemove',  this.windowMouseMoveWrapper)
       ad('mousedown',  this.windowMouseDownWrapper)
       ad('mouseup',  this.windowMouseUpWrapper)
     }
     if  (this.options.touchControls)  {
-      //ad('touchmove' ,  this.windowMouseMoveWrapper, {passive: false})
-      ad('touchstart',  this.windowMouseDownWrapper, {passive: false})
-      ad('touchend'  ,  this.windowMouseUpWrapper  , {passive: false})
+      ad('touchmove' ,  this.windowMouseMoveWrapper, {passive: true})
+      ad('touchstart',  this.windowMouseDownWrapper, {passive: true})
+      ad('touchend'  ,  this.windowMouseUpWrapper  , {passive: true})
     }
   }
 
@@ -195,7 +195,7 @@ class AnimBgBase {
       const touches = e.changedTouches;
       if (touches) {
         //this.mouse.button = 0
-        e.preventDefault()
+        //e.preventDefault()
       }
       this.mouse.sourceEvents.mousemove = e;
 
@@ -210,7 +210,7 @@ class AnimBgBase {
       const touches = e.changedTouches
       if (touches) {
         this.mouse.button = 0;
-        e.preventDefault();
+        //e.preventDefault();
       } else {
         this.mouse.button = e.button;
       }
@@ -226,7 +226,7 @@ class AnimBgBase {
 
       const touches = e.changedTouches;
       if (touches) {
-        e.preventDefault()
+        //e.preventDefault()
       }
       this.mouse.button = -1;
       this.mouse.sourceEvents.mouseup = e;
@@ -342,11 +342,11 @@ class AnimBgBase {
 
   destroy()  {
     const  rm  =  window.removeEventListener
-    //rm('touchmove',  this.windowMouseMoveWrapper)
+    rm('touchmove',  this.windowMouseMoveWrapper)
     rm('touchstart',  this.windowMouseDownWrapper)
     rm('touchend',  this.windowMouseUpWrapper)
     //rm('scroll',  this.windowMouseMoveWrapper)
-    //rm('mousemove',  this.windowMouseMoveWrapper)
+    rm('mousemove',  this.windowMouseMoveWrapper)
     rm('mousedown',  this.windowMouseDownWrapper)
     rm('mouseup',  this.windowMouseUpWrapper)
     rm('resize',  this.resize)
