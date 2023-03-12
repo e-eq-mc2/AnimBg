@@ -151,6 +151,27 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     const world  = engine.world
     const mouse  = this.mouse
 
+    const mouseConstraint = Matter.MouseConstraint.create(engine, {
+      mouse: this.mouse,
+      constraint: {
+        stiffness: 0.2,
+        render: {
+          visible: false
+        },
+      },
+      collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
+    })
+    Matter.Composite.add(world, mouseConstraint)
+
+    Matter.Events.on(mouseConstraint, 'mousedown', (event) => {
+      if ( mouseConstraint.body ) return
+      mouseConstraint.collisionFilter.category = 0x0000 
+    })
+    Matter.Events.on(mouseConstraint, 'mouseup', (event) => {
+      mouseConstraint.collisionFilter.category = 0x0001
+    })
+
+
     Matter.Events.on(engine, 'beforeUpdate', (e) => {
       //if ( ! ( mouse.sourceEvents.mousedown && mouse.button == 0 ) ) return
 
