@@ -64,6 +64,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
       baseX, baseY, size, length,
       bodyColor,
       bodyLineWidth      , bodyLineColor,
+      constraintVisible,
       constraintLineWidth, constraintLineColor,
       text, font,
       bodyColors, textColors,
@@ -93,6 +94,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
 
       const constraint = Matter.Constraint.create({pointA: { x: x, y: baseY }, bodyB: body, 
         render:{
+          visible: constraintVisible === void 0 ? true : constraintVisible,
           strokeStyle: constraintLineColor,
           lineWidth: constraintLineWidth,
         }
