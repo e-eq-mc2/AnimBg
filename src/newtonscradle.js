@@ -14,9 +14,9 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
   onInitRenderer() {
     // create engine
     const engine = Matter.Engine.create({
-      constraintIterations: 20,
-      positionIterations: 20,
-      velocityIterations: 20,
+      constraintIterations: 10,
+      positionIterations: 10,
+      velocityIterations: 10,
     })
 
     const world = engine.world
@@ -55,7 +55,7 @@ AnimBg.NewtonsCradle = class NewtonsCradle extends AnimBgBase {
     // create runner
     this.runner = Matter.Runner.create({
       //isFixed: true,
-      fps: 90,
+      fps: 60,
     })
   }
 
