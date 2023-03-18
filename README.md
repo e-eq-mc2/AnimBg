@@ -5,7 +5,6 @@ Animation Background for webpages.
 [![alt text](img/demo00.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
 [![alt text](img/demo01.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
 
-
 ## How to use
 
 ### NewtonsCradle
