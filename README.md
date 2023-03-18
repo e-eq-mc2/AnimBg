@@ -47,6 +47,7 @@ AnimBg.Balls.run({
   el: "#animation-bg",
   dropInterval: 500, // milliseconds
   maxBodies:    100,
+  layers:         2,
   bodyColors: ['#000000', '#999999', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
 })
 </script>

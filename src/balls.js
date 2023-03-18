@@ -126,7 +126,6 @@ export class Balls extends AnimBgBase {
       bodyLineWidth      , bodyLineColor,
       bodyColors,
     } = this.options
-
       
     const engine = this.render.engine
     const world  = engine.world
@@ -136,8 +135,8 @@ export class Balls extends AnimBgBase {
     const bounds  = this.render.bounds.max
     const maxSize = bounds.y  * 0.5
     //const size = randomReal() * maxSize
-    const mean = maxSize * 0.3
-    const sd   = mean * 0.3
+    const mean = maxSize * 0.4
+    const sd   = mean * 0.5
     const nd = normalDistribution(sd, mean) 
     const size = Math.abs( nd.z1 )
 
