@@ -98,25 +98,17 @@ export class Balls extends AnimBgBase {
         collisionFilter: cf,
       })
       Composite.add(world, mouseConstraint)
-
-      //Events.on(mouseConstraint, 'mousedown', (event) => {
-      //  if ( mouseConstraint.body ) return
-
-      //  mouseConstraint.collisionFilter.category = 0x0000 
-      //})
-      //Events.on(mouseConstraint, 'mouseup', (event) => {
-      //  mouseConstraint.collisionFilter.category = 0x0001
-      //})
     }
 
     Events.on(engine, 'beforeUpdate', (e) => {
+      if ( mouse.button < 0 ) return
+
       const nonStaticBodies = this.collectNonStaticBodies()
       const foundBodies = Query.point(nonStaticBodies, mouse.position)
 
+
       const now = performance.now()
       for ( const fb of foundBodies )  {
-        if ( fb.isStatic ) continue
-
         const dt = now - ( fb.colorChangedAt || 0 )
         if ( dt < colorChangeInterval ) continue
         fb.colorChangedAt = now

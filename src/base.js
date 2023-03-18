@@ -199,6 +199,7 @@ class AnimBgBase {
   }
 
   windowMouseUpWrapper(e){
+    this.mouse.button = -1;
     this.onCanvas(e, (x, y) => {
       this.mouse.setPosition({x: x, y: y})
 
@@ -206,7 +207,6 @@ class AnimBgBase {
       if (touches) {
         //e.preventDefault()
       }
-      this.mouse.button = -1;
       this.mouse.sourceEvents.mouseup = e;
 
       this.triggerMouseUp(x,  y)
