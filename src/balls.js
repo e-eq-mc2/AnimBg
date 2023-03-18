@@ -28,7 +28,7 @@ export class Balls extends AnimBgBase {
       maxBodies: 100,
       layers   :   1,
       restitution: 1.0,
-      sizeFactors: { max: 0.6, mean: 0.4, sd: 0.6},
+      sizeFactors: { max: 0.5, mean: 0.3, sd: 0.6},
       colorChangeInterval: 1000, // milliseconds
     }, options)
 
@@ -112,7 +112,6 @@ export class Balls extends AnimBgBase {
         if ( fb.isStatic ) continue
 
         const dt = now - ( fb.colorChangedAt || 0 )
-        console.log(fb.colorChangedAt, colorChangeInterval)
         if ( dt < colorChangeInterval ) continue
         fb.colorChangedAt = now
 
