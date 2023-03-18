@@ -87,7 +87,7 @@ export class Balls extends AnimBgBase {
           visible: false
         },
       },
-      collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
+      collisionFilter: {category: 0xFFFFFFFF, mask: 0xFFFFFFFF},
     })
     Composite.add(world, mouseConstraint)
 
@@ -101,25 +101,21 @@ export class Balls extends AnimBgBase {
     })
 
     Events.on(engine, 'beforeUpdate', (e) => {
-      //if ( ! ( mouse.sourceEvents.mousedown && mouse.button == 0 ) ) return
-
       const nonStaticBodies = this.collectNonStaticBodies()
       const foundBodies = Query.point(nonStaticBodies, mouse.position)
 
-      if ( foundBodies.length === 0 ) return
+      for ( const fb of foundBodies )  {
+        if ( fb.isStatic ) continue
 
-      const fb = foundBodies[0]
-      if ( fb === this.prevFoundBody ) return 
-      if ( fb.isStatic               ) return
+        if ( this.prevFoundBodies && this.prevFoundBodies.find((b) => b === fb)  ) continue
 
-      const bodyColors = this.options.bodyColors.filter(b => b !== fb.render.fillStyle)
-      this.currentBodyColor = choose( bodyColors )
-      fb.render.fillStyle = this.currentBodyColor
-
-      this.prevFoundBody = fb
+        const bodyColors = this.options.bodyColors.filter(b => b !== fb.render.fillStyle)
+        this.currentBodyColor = choose( bodyColors )
+        fb.render.fillStyle = this.currentBodyColor
+      }
+      this.prevFoundBodies = foundBodies
     })
   }
-
 
   dropBall() {
     if ( ! this.needDrop() ) return
