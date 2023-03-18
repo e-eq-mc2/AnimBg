@@ -29,15 +29,16 @@ export class Balls extends AnimBgBase {
       dropInterval: 500, // milliseconds
       maxBodies: 100,
       layers   :   1,
+      restitution: 1.0,
     }, this.options)
   }
 
   onInitRenderer() {
     // create engine
     const engine = Engine.create({
-      //constraintIterations: 10,
-      //positionIterations: 10,
-      //velocityIterations: 10,
+      constraintIterations: 2,
+      positionIterations: 2,
+      velocityIterations: 2,
     })
 
     const world = engine.world
@@ -63,8 +64,8 @@ export class Balls extends AnimBgBase {
 
     // create runner
     this.runner = Runner.create({
-      //isFixed: true,
-      fps: 60,
+      isFixed: true,
+      fps: 180,
     })
 
 
@@ -123,6 +124,7 @@ export class Balls extends AnimBgBase {
     if ( ! this.needDrop() ) return
 
     const {
+      restitution,
       bodyLineWidth      , bodyLineColor,
       bodyColors,
     } = this.options
@@ -130,12 +132,12 @@ export class Balls extends AnimBgBase {
     const engine = this.render.engine
     const world  = engine.world
 
-    this.droppedAt = engine.timing.timestamp
+    this.droppedAt = this.now
 
     const bounds  = this.render.bounds.max
-    const maxSize = bounds.y  * 0.5
+    const maxSize = bounds.y  * 0.6
     //const size = randomReal() * maxSize
-    const mean = maxSize * 0.4
+    const mean = maxSize * 0.3
     const sd   = mean * 0.5
     const nd = normalDistribution(sd, mean) 
     const size = Math.abs( nd.z1 )
@@ -147,7 +149,7 @@ export class Balls extends AnimBgBase {
 
     const cf = this.chooseCollisionFilter()
     const body = Bodies.circle(x, y, size/2, {
-      restitution: 1.0,
+      restitution: restitution,
       collisionFilter: cf,
       render: {
         fillStyle: bodyColor,
@@ -176,7 +178,6 @@ export class Balls extends AnimBgBase {
         }
       )
 
-      console.log(this.collisionFilter)
     }
 
     return choose(this.collisionFilter)
@@ -189,7 +190,8 @@ export class Balls extends AnimBgBase {
     const nonStaticBodies = this.collectNonStaticBodies()
     const mb = nonStaticBodies.length < maxBodies
 
-    const delta = engine.timing.timestamp - ( this.droppedAt || 0 )
+    this.now = performance.now()
+    const delta = this.now - ( this.droppedAt || 0 )
     const di = delta  > dropInterval
 
     return mb && di 
@@ -202,11 +204,13 @@ export class Balls extends AnimBgBase {
   onUpdate (time) {
     const engine = this.render.engine
 
+    this.render.context.save(); //Freeze redraw
     Render.update(this.render, time)
+    this.render.context.restore(); //And now do the redraw
+
 
     if( this.runner.enabled ) {
       Runner.tick(this.runner, this.render.engine, time)
-
       this.dropBall()
     }
   }
