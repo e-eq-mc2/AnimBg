@@ -28,6 +28,7 @@ export class Balls extends AnimBgBase {
     this.options = Object.assign({
       dropInterval: 500, // milliseconds
       maxBodies: 100,
+      layers   :   1,
     }, this.options)
   }
 
@@ -133,7 +134,7 @@ export class Balls extends AnimBgBase {
     this.droppedAt = engine.timing.timestamp
 
     const bounds  = this.render.bounds.max
-    const maxSize = bounds.y  * 0.4
+    const maxSize = bounds.y  * 0.5
     //const size = randomReal() * maxSize
     const mean = maxSize * 0.3
     const sd   = mean * 0.3
@@ -145,8 +146,10 @@ export class Balls extends AnimBgBase {
 
     const bodyColor = choose( bodyColors )
 
+    const cf = this.chooseCollisionFilter()
     const body = Bodies.circle(x, y, size/2, {
       restitution: 1.0,
+      collisionFilter: cf,
       render: {
         fillStyle: bodyColor,
         strokeStyle: bodyLineColor,
@@ -158,6 +161,26 @@ export class Balls extends AnimBgBase {
 
     World.add(world, body)
     return body
+  }
+
+  chooseCollisionFilter() {
+    const {
+      layers
+    } = this.options
+
+    if ( ! this.collisionFilters ) {
+      this.collisionFilter = [...Array(layers)].map((_, i) => i).map(  
+        (v, i) => {
+          const c = 2 ** v
+          const m = c
+          return {category: c, mask: m}
+        }
+      )
+
+      console.log(this.collisionFilter)
+    }
+
+    return choose(this.collisionFilter)
   }
 
   needDrop() {
@@ -328,9 +351,10 @@ class Walls {
     this.world = world
 
     const baseW = w + this.shiftX*2 + this.thickness
-    this.base  = Bodies.rectangle(            w/2, h + this.thickness/2,          baseW, this.thickness, { isStatic: true })
-    this.left  = Bodies.rectangle(0 - this.shiftX,                  h/2, this.thickness,              h, { isStatic: true })
-    this.right = Bodies.rectangle(w + this.shiftX,                  h/2, this.thickness,              h, { isStatic: true })
+    const o = {isStatic: true, collisionFilter: { category: 0xFFFFFFFF, mask: 0xFFFFFFFF}}
+    this.base  = Bodies.rectangle(            w/2, h + this.thickness/2,          baseW, this.thickness, o)
+    this.left  = Bodies.rectangle(0 - this.shiftX,                  h/2, this.thickness,              h, o)
+    this.right = Bodies.rectangle(w + this.shiftX,                  h/2, this.thickness,              h, o)
 
     World.add(this.world, this.array())
   }
@@ -338,6 +362,8 @@ class Walls {
   array() {
     return [this.base, this.left, this.right]
   }
+
+
 
   update(w, h) {
     const baseW = w + this.shiftX*2 + this.thickness
