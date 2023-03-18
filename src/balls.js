@@ -23,14 +23,15 @@ export class Balls extends AnimBgBase {
   }
 
   constructor(options) {
-    super(options)
-
-    this.options = Object.assign({
+    options = Object.assign({
       dropInterval: 500, // milliseconds
       maxBodies: 100,
       layers   :   1,
       restitution: 1.0,
-    }, this.options)
+      sizeFactors: { max: 0.6, mean: 0.4, sd: 0.6},
+    }, options)
+
+    super(options)
   }
 
   onInitRenderer() {
@@ -127,6 +128,7 @@ export class Balls extends AnimBgBase {
       restitution,
       bodyLineWidth      , bodyLineColor,
       bodyColors,
+      sizeFactors,
     } = this.options
       
     const engine = this.render.engine
@@ -134,11 +136,12 @@ export class Balls extends AnimBgBase {
 
     this.droppedAt = this.now
 
+
     const bounds  = this.render.bounds.max
-    const maxSize = bounds.y  * 0.6
+    const maxSize = bounds.y  * sizeFactors.max
     //const size = randomReal() * maxSize
-    const mean = maxSize * 0.3
-    const sd   = mean * 0.5
+    const mean = maxSize * sizeFactors.mean
+    const sd   = mean * sizeFactors.sd
     const nd = normalDistribution(sd, mean) 
     const size = Math.abs( nd.z1 )
 
