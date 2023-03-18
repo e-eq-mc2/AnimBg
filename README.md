@@ -48,8 +48,7 @@ AnimBg.Balls.run({
   dropInterval: 500, // milliseconds
   maxBodies:    100,
   bodyColors: ['#000000', '#999999', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
-  })
-)
+})
 </script>
 ````
 
