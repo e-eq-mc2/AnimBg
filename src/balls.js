@@ -29,6 +29,7 @@ export class Balls extends AnimBgBase {
       layers   :   1,
       restitution: 1.0,
       sizeFactors: { max: 0.6, mean: 0.4, sd: 0.6},
+      colorChangeInterval: 1000, // milliseconds
     }, options)
 
     super(options)
@@ -75,6 +76,8 @@ export class Balls extends AnimBgBase {
   }
 
   onInitMouse() {
+    const {bodyColors, colorChangeInterval} = this.options
+
     const engine = this.render.engine
     const world  = engine.world
     const mouse  = this.mouse
@@ -104,16 +107,18 @@ export class Balls extends AnimBgBase {
       const nonStaticBodies = this.collectNonStaticBodies()
       const foundBodies = Query.point(nonStaticBodies, mouse.position)
 
+      const now = performance.now()
       for ( const fb of foundBodies )  {
         if ( fb.isStatic ) continue
 
-        if ( this.prevFoundBodies && this.prevFoundBodies.find((b) => b === fb)  ) continue
+        const dt = now - ( fb.colorChangedAt || 0 )
+        console.log(fb.colorChangedAt, colorChangeInterval)
+        if ( dt < colorChangeInterval ) continue
+        fb.colorChangedAt = now
 
-        const bodyColors = this.options.bodyColors.filter(b => b !== fb.render.fillStyle)
-        this.currentBodyColor = choose( bodyColors )
-        fb.render.fillStyle = this.currentBodyColor
+        const choice = choose( bodyColors.filter(bc => bc !== fb.render.fillStyle) )
+        fb.render.fillStyle = choice
       }
-      this.prevFoundBodies = foundBodies
     })
   }
 
@@ -131,7 +136,6 @@ export class Balls extends AnimBgBase {
     const world  = engine.world
 
     this.droppedAt = this.now
-
 
     const bounds  = this.render.bounds.max
     const maxSize = bounds.y  * sizeFactors.max
@@ -190,8 +194,8 @@ export class Balls extends AnimBgBase {
     const mb = nonStaticBodies.length < maxBodies
 
     this.now = performance.now()
-    const delta = this.now - ( this.droppedAt || 0 )
-    const di = delta  > dropInterval
+    const dt = this.now - ( this.droppedAt || 0 )
+    const di = dt  > dropInterval
 
     return mb && di 
   }
@@ -227,34 +231,11 @@ export class Balls extends AnimBgBase {
     const ow = render.options.width  
     const oh = render.options.height
 
-    const oHpW = oh / ow
-    const oWpH = ow / oh
-
     const cw = rect.width
     const ch = rect.height
-    const cHpW = ch / cw
-    const cWpH = cw / ch
 
-    let bw, bh
-    if ( cHpW > oHpW ) {
-     // +--------+        +----+
-     // |        |   ->   |    |
-     // +--------+        +----+
-     const scaleH = cHpW / oHpW
-     //bw = ow
-     //bh = oh * scaleH
-     bw = cw
-     bh = oh
-    } else {
-     // +----+        +--------+
-     // |    |   ->   |        |
-     // +----+        +--------+
-      const scaleW = cWpH / oWpH
-      bw = ow * scaleW
-      bh = oh
-    }
-
-    
+    const bw = cw
+    const bh = ch
 
     render.options.hasBounds = true
     render.bounds.min.x = 0 
