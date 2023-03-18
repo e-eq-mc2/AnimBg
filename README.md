@@ -2,7 +2,12 @@
 ## What's this?
 Animation Background for webpages.
 
+### NewtonsCradle
+---
 [![alt text](img/demo00.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
+
+### Balls
+---
 [![alt text](img/demo01.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
 
 ## How to use
