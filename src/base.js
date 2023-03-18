@@ -7,28 +7,6 @@ const AnimBg = (win && window.AnimBg) || {}
 
 export {AnimBg}
 
-//  ----  Helper  functions  ----
-const  error  =  function()  {
-  Array.prototype.unshift.call(arguments,  '[ANIMBG]')
-  return  console.error.apply(this,  arguments)
-}
-
-const  mobileCheck  =  function()  {
-  if  (typeof  navigator  !==  'undefined')  {
-    return  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera  Mini/i.test(navigator.userAgent)  ||  window.innerWidth  <  600
-  }
-  return  null
-}
-
-const  color2Hex  =  function(color)  {
-  if  (typeof  color  ==  'number'){
-    return  '#'  +    ('00000'  +  color.toString(16)).slice(-6)
-  }  else  return  color
-}
-
-
-//  ----  ----------------  ----
-
 class AnimBgBase {
   constructor(userOptions  =  {})  {
     if  (!win)  return  false
@@ -361,6 +339,28 @@ class AnimBgBase {
   }
 }
 
+export default AnimBgBase
+
+//  ----  Helper  functions  ----
+const  error  =  function()  {
+  Array.prototype.unshift.call(arguments,  '[ANIMBG]')
+  return  console.error.apply(this,  arguments)
+}
+
+const  mobileCheck  =  function()  {
+  if  (typeof  navigator  !==  'undefined')  {
+    return  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera  Mini/i.test(navigator.userAgent)  ||  window.innerWidth  <  600
+  }
+  return  null
+}
+
+const  color2Hex  =  function(color)  {
+  if  (typeof  color  ==  'number'){
+    return  '#'  +    ('00000'  +  color.toString(16)).slice(-6)
+  }  else  return  color
+}
+//  ----  ----------------  ----
+
 class Mouse {
   constructor() {
       this.position     = {x: 0, y: 0}
@@ -384,7 +384,3 @@ class Mouse {
   }
 
 }
-
-AnimBg.Mouse = Mouse
-
-export default AnimBgBase

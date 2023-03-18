@@ -8,7 +8,7 @@
   </head>
   <body>
     <!-- page content -->
-    <section id='animation-bg'> 
+    <section id='animation-bg-balls', class='animbg'> 
       <h1>AnimBg</h1>
       <h1>AnimBg</h1>
       <h1>AnimBg</h1>
@@ -21,10 +21,33 @@
       <h1>AnimBg</h1>
       <h1>AnimBg</h1>
     </section>
+
+    <section id='animation-bg-newtonscradles', class='animbg'> 
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+      <h1>AnimBg</h1>
+    </section>
+
     <script src="dist/animbg.min.js"></script>
     <script> 
+      AnimBg.Balls.run({
+        el: "#animation-bg-balls",
+        dropInterval: 500, // milliseconds
+        maxBodies:    100,
+        bodyColors: ['#000000', '#999999', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
+      })
+    </script>
+    <script>
       AnimBg.NewtonsCradle.run({
-        el: "#animation-bg",
+        el: "#animation-bg-newtonscradles",
         boundsOffset: {x: 0, y: 0},
         boundsScale: {x: 1.05, y: 1.05},
         bodyColors: ['#000000', '#999999',  '#ffffff', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
@@ -32,8 +55,8 @@
         newtonsCradles: [
           {
             baseX: 150, baseY: 20, size: 40, length: 300,
-            bodyLineWidth:       8, bodyLineColor:       '#a6a6a6',
-            constraintVisible: false, constraintLineWidth: 3, constraintLineColor: '#a6a6a6',
+            bodyLineWidth:       8, bodyLineColor: '#a6a6a6',
+            constraintLineWidth: 3, constraintLineColor: '#a6a6a6',
             text: "Animation", font: '800 60px Arial',
           },
           {
@@ -45,6 +68,7 @@
         ]
       })
     </script>
+
     <h1>AnimBg</h1>
     <h1>AnimBg</h1>
     <h1>AnimBg</h1>

@@ -8,58 +8,50 @@ const
   Render          = Matter.Render,
   World           = Matter.World,
   Body            = Matter.Body,
-  Bodies          = Matter.Bodies,
   Mouse           = Matter.Mouse,
   MouseConstraint = Matter.MouseConstraint,
   Common          = Matter.Common,
-  Constraint      = Matter.Constraint,
   Composites      = Matter.Composites,
   Composite       = Matter.Composite,
+  Bodies          = Matter.Bodies,
   Vertices        = Matter.Vertices,
   Query           = Matter.Query
 
-export class NewtonsCradle extends AnimBgBase {
+export class Balls extends AnimBgBase {
   static run(options) {
-    const nc = new NewtonsCradle(options)
+    const nc = new Balls(options)
   }
 
   constructor(options) {
     super(options)
+
+    this.options = Object.assign({
+      dropInterval: 500, // milliseconds
+      maxBodies: 100,
+    }, this.options)
   }
 
   onInitRenderer() {
     // create engine
     const engine = Engine.create({
-      constraintIterations: 10,
-      positionIterations: 10,
-      velocityIterations: 10,
+      //constraintIterations: 10,
+      //positionIterations: 10,
+      //velocityIterations: 10,
     })
 
     const world = engine.world
-    const optsList = this.options.newtonsCradles
 
-    for(let i=0; i < optsList.length; ++i) {
-      const opts = optsList[i]
-
-      // inject
-      opts.bodyColors = this.options.bodyColors
-      opts.textColors = this.options.textColors
-
-      const nc = this.createNewtonsCradle(opts)
-      Composite.add(world, nc)
-    }
-
-    // create renderer
+   // create renderer
     // https://github.com/liabru/matter-js/wiki/Rendering
-    const bounds = this.findBounds( Composite.allBodies(engine.world) )
+    const bounds = {min: {x: 0, y: 0}, max: {x: this.width, y: this.height}}
     const boundsScale = this.options.boundsScale //|| {x: 1.1, y: 1.1}
     this.render = Render.create({
       element: this.el,
       engine: engine,
       options: {
         background: '',
-        width:  bounds.max.x * boundsScale.x,
-        height: bounds.max.y * boundsScale.y,
+        width:  bounds.max.x,
+        height: bounds.max.y,
         wireframes: false,
       }
     })
@@ -73,96 +65,11 @@ export class NewtonsCradle extends AnimBgBase {
       //isFixed: true,
       fps: 60,
     })
+
+
+    // create walls
+    this.walls = new Walls(world, 100, bounds.max.x, bounds.max.y)
   }
-
-  createNewtonsCradle(options) {
-    const {
-      baseX, baseY, size, length,
-      bodyColor,
-      bodyLineWidth      , bodyLineColor,
-      constraintVisible,
-      constraintLineWidth, constraintLineColor,
-      text, font,
-      bodyColors, textColors,
-    } = options
-
-    const newtonsCradle = Composite.create()
-    for (let i = 0; i < text.length; i++) {
-      // ---- body -----
-      const separation = 1.95
-      const x  = baseX + i * (size * separation)
-      const y  = baseY + length
-      const bodyColor = bodyColors[0]
-      const body = Bodies.circle(
-        x,
-        y,
-        size,
-        { 
-          inertia: Infinity, restitution: 1, friction: 0, frictionAir: 0, slop: size * 0.005,
-          collisionFilter: {category: 0x0001, mask: 0xFFFFFFFF},
-          render: {
-            fillStyle: bodyColor,
-            strokeStyle: bodyLineColor,
-            lineWidth: bodyLineWidth,
-          },
-        },
-      )
-
-      const constraint = Constraint.create({pointA: { x: x, y: baseY }, bodyB: body, 
-        render:{
-          visible: constraintVisible === void 0 ? true : constraintVisible,
-          strokeStyle: constraintLineColor,
-          lineWidth: constraintLineWidth,
-        }
-      })
-      Composite.addBody(newtonsCradle, body)
-      Composite.addConstraint(newtonsCradle, constraint)
-
-      // ---- char ----
-      const char  = text[i]
-      const textColor = choose(textColors)
-
-      const charSize = getCharSize(char, font)
-      const offset = {x: - charSize.x / 2, y: charSize.y / 4}
-      const charData = {char: char, offset: offset, color: textColor, font: font}
-      // inject 
-      body.charData = charData
-    }
-
-    // swing
-    const angle = 160
-    const dx = Math.cos( angle * Math.PI / 180 ) *   length
-    const dy = Math.sin( angle * Math.PI / 180 ) * - length - length
-    Body.translate(newtonsCradle.bodies[0], {x: dx, y: dy})
-    return newtonsCradle
-  }
-
-  findBounds (bodies) {
-    // find bounds of all objects
-    const bounds = {
-      min: { x: Infinity, y: Infinity },
-      max: { x: -Infinity, y: -Infinity }
-    }
-
-    for (const body of bodies) {
-      const min = body.bounds.min
-      const max = body.bounds.max
-
-      if (min.x < bounds.min.x)
-        bounds.min.x = min.x
-
-      if (max.x > bounds.max.x)
-        bounds.max.x = max.x;
-
-      if (min.y < bounds.min.y)
-        bounds.min.y = min.y;
-
-      if (max.y > bounds.max.y)
-        bounds.max.y = max.y;
-    }
-
-    return bounds
-  } 
 
   onInitMouse() {
     const engine = this.render.engine
@@ -183,34 +90,87 @@ export class NewtonsCradle extends AnimBgBase {
 
     Events.on(mouseConstraint, 'mousedown', (event) => {
       if ( mouseConstraint.body ) return
+
       mouseConstraint.collisionFilter.category = 0x0000 
     })
     Events.on(mouseConstraint, 'mouseup', (event) => {
       mouseConstraint.collisionFilter.category = 0x0001
     })
 
-
     Events.on(engine, 'beforeUpdate', (e) => {
       //if ( ! ( mouse.sourceEvents.mousedown && mouse.button == 0 ) ) return
 
-      const foundBodies = Query.point(
-        Composite.allBodies(engine.world), 
-        mouse.position
-      )
+      const nonStaticBodies = this.collectNonStaticBodies()
+      const foundBodies = Query.point(nonStaticBodies, mouse.position)
 
       if ( foundBodies.length === 0 ) return
 
       const fb = foundBodies[0]
-      const allBodies = Composite.allBodies(engine.world)
-      if ( ! this.currentBodyColor || allBodies.every(b => b.render.fillStyle === fb.render.fillStyle) ) {
-        const bodyColors = this.options.bodyColors.filter(b => b !== fb.render.fillStyle)
-        this.currentBodyColor = choose( bodyColors )
-      }
+      if ( fb === this.prevFoundBody ) return 
+      if ( fb.isStatic               ) return
+
+      const bodyColors = this.options.bodyColors.filter(b => b !== fb.render.fillStyle)
+      this.currentBodyColor = choose( bodyColors )
       fb.render.fillStyle = this.currentBodyColor
 
-      //const textColors = this.options.textColors.filter( c => c !== fb.charData.color )
-      //fb.charData.color = choose( textColors )
+      this.prevFoundBody = fb
     })
+  }
+
+
+  dropBall() {
+    if ( ! this.needDrop() ) return
+
+    const {
+      bodyLineWidth      , bodyLineColor,
+      bodyColors,
+    } = this.options
+
+      
+    const engine = this.render.engine
+    const world  = engine.world
+
+    this.droppedAt = engine.timing.timestamp
+
+    const bounds  = this.render.bounds.max
+    const maxSize = bounds.y  * 0.4
+    //const size = randomReal() * maxSize
+    const mean = maxSize * 0.3
+    const sd   = mean * 0.3
+    const nd = normalDistribution(sd, mean) 
+    const size = Math.abs( nd.z1 )
+
+    const x = randomReal(0 + size, bounds.x - size)
+    const y = 0 - size * 1.2
+
+    const bodyColor = choose( bodyColors )
+
+    const body = Bodies.circle(x, y, size/2, {
+      restitution: 1.0,
+      render: {
+        fillStyle: bodyColor,
+        strokeStyle: bodyLineColor,
+        lineWidth: bodyLineWidth,
+      },
+    })
+
+    //Body.applyForce(body, {x: body.position.x, y: body.position.y}, this.initialForce)
+
+    World.add(world, body)
+    return body
+  }
+
+  needDrop() {
+    const { maxBodies, dropInterval, } = this.options
+    const engine = this.render.engine
+
+    const nonStaticBodies = this.collectNonStaticBodies()
+    const mb = nonStaticBodies.length < maxBodies
+
+    const delta = engine.timing.timestamp - ( this.droppedAt || 0 )
+    const di = delta  > dropInterval
+
+    return mb && di 
   }
 
   getCanvasElement()  {
@@ -218,13 +178,21 @@ export class NewtonsCradle extends AnimBgBase {
   }
 
   onUpdate (time) {
-    Render.update(this.render, time)
+    const engine = this.render.engine
 
-    this.renderText()
+    Render.update(this.render, time)
 
     if( this.runner.enabled ) {
       Runner.tick(this.runner, this.render.engine, time)
+
+      this.dropBall()
     }
+  }
+
+  collectNonStaticBodies () {
+    const engine = this.render.engine
+    const bodies = Composite.allBodies(engine.world).filter(b => ! b.isStatic )
+    return bodies
   }
 
   onResize() {
@@ -248,8 +216,10 @@ export class NewtonsCradle extends AnimBgBase {
      // |        |   ->   |    |
      // +--------+        +----+
      const scaleH = cHpW / oHpW
-      bw = ow
-      bh = oh * scaleH
+     //bw = ow
+     //bh = oh * scaleH
+     bw = cw
+     bh = oh
     } else {
      // +----+        +--------+
      // |    |   ->   |        |
@@ -259,43 +229,18 @@ export class NewtonsCradle extends AnimBgBase {
       bh = oh
     }
 
+    
+
     render.options.hasBounds = true
     render.bounds.min.x = 0 
     render.bounds.min.y = 0 
     render.bounds.max.x = bw
     render.bounds.max.y = bh
 
+    this.walls.update(bw, bh)
+
     const pr = render.options.pixelRatio
     Mouse.setScale(this.mouse, {x: (bw / ow) / pr, y: (bh / oh) / pr});
-  }
-
-
-  renderText() {
-    const engine  = this.render.engine
-    const context = this.render.context
-    const bodies  = Composite.allBodies(engine.world)
-
-    Render.startViewTransform(this.render);
-    for( const body of bodies ) {
-      const charData = body.charData
-
-      const char   = charData.char
-      const offset = charData.offset
-      const color  = charData.color
-      const font   = charData.font
-
-      const x = body.position.x + offset.x
-      const y = body.position.y + offset.y
-
-      context.font = font
-      context.fillStyle = color
-      context.fillText(char, x, y)
-    }
-    Render.endViewTransform(this.render)
-  }
-
-  getBodiesByLabel(label, engine) {
-    return Composite.allBodies(engine.world).filter(body => body.label === label)
   }
 }
 
@@ -344,6 +289,21 @@ const choose = (choices) => {
   return choices[Math.floor(Math.random() * choices.length)];
 }
 
+const randomReal = (min = 0, max = 1) => {
+  const rnd = Math.random() * (max - min) + min
+  return rnd
+}
+
+const normalDistribution = (sd, mean) => {
+  const x = Math.random()
+  const y = Math.random()
+  
+  const z1 = Math.sqrt(-2*Math.log(x))*Math.cos(2 * Math.PI  * y);
+  const z2 = Math.sqrt(-2*Math.log(x))*Math.sin(2 * Math.PI  * y);
+  
+  return {z1:sd+z1*mean,z2:sd+z2*mean};
+}
+
 const getCharSize = (char, font) => {
   const parent = document.body
   const id = `to-get-char-size-${Math.random().toString(32).substring(2)}`
@@ -357,4 +317,43 @@ const getCharSize = (char, font) => {
   elm.remove()
 
   return {x: width, y: height}
+}
+
+
+class Walls {
+  constructor(world, th, w, h) {
+    this.thickness = th
+
+    this.shiftX = this.thickness / 2
+    this.world = world
+
+    const baseW = w + this.shiftX*2 + this.thickness
+    this.base  = Bodies.rectangle(            w/2, h + this.thickness/2,          baseW, this.thickness, { isStatic: true })
+    this.left  = Bodies.rectangle(0 - this.shiftX,                  h/2, this.thickness,              h, { isStatic: true })
+    this.right = Bodies.rectangle(w + this.shiftX,                  h/2, this.thickness,              h, { isStatic: true })
+
+    World.add(this.world, this.array())
+  }
+
+  array() {
+    return [this.base, this.left, this.right]
+  }
+
+  update(w, h) {
+    const baseW = w + this.shiftX*2 + this.thickness
+    Body.setPosition(this.base, {x: w/2, y: h + this.thickness/2}) 
+    Body.setVertices(this.base, Vertices.fromPath(
+      'L 0 0 L ' + baseW + ' 0 L ' + baseW + ' ' + this.thickness + ' L 0 ' + this.thickness 
+    ))
+
+    Body.setPosition(this.left, {x: 0 - this.shiftX, y: h/2}) 
+    Body.setVertices(this.left, Vertices.fromPath(
+      'L 0 0 L ' + this.thickness + ' 0 L ' + this.thickness + ' ' + h + ' L 0 ' + h 
+    ))
+
+    Body.setPosition(this.right, {x: w + this.shiftX, y: h/2}) 
+    Body.setVertices(this.right, Vertices.fromPath(
+      'L 0 0 L ' + this.thickness + ' 0 L ' + this.thickness + ' ' + h + ' L 0 ' + h 
+    ))
+  }
 }

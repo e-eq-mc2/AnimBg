@@ -1,4 +1,4 @@
-#animation-bg {
+.animbg {
   /*background: #00ff00;*/
   color: #003366;
   font-size: 65px;
@@ -7,6 +7,6 @@
   /*padding: 400px 0px 400px;*/
 }
 
-#animation-bg canvas {
+.animbg canvas {
   border: solid #ff0000;
 }

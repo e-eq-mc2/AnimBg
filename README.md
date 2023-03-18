@@ -2,11 +2,13 @@
 ## What's this?
 Animation Background for webpages.
 
-[![alt text](img/demo.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
+[![alt text](img/demo00.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
+[![alt text](img/demo01.png "AnimBg")](https://github.com/e-eq-mc2/AnimBg)
 
 
 ## How to use
 
+### NewtonsCradle
 ```html
 <script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/animbg/dist/animbg.min.js"></script>
 <script> 
@@ -31,6 +33,17 @@ AnimBg.NewtonsCradle.run({
   ]
 })
 </script>
+````
+
+### Balls
+```html
+AnimBg.Balls.run({
+  el: "#animation-bg",
+  dropInterval: 500, // milliseconds
+  maxBodies:    100,
+  bodyColors: ['#000000', '#999999', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
+  })
+)
 ````
 
 That's it!
