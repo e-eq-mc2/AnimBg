@@ -37,6 +37,8 @@ AnimBg.NewtonsCradle.run({
 
 ### Balls
 ```html
+<script src="https://cdn.jsdelivr.net/gh/e-eq-mc2/animbg/dist/animbg.min.js"></script>
+<script> 
 AnimBg.Balls.run({
   el: "#animation-bg",
   dropInterval: 500, // milliseconds
@@ -44,6 +46,7 @@ AnimBg.Balls.run({
   bodyColors: ['#000000', '#999999', '#ff0066', '#ff66cc', '#0099ff', '#009900', '#ffcc00',],
   })
 )
+</script>
 ````
 
 That's it!
