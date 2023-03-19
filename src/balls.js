@@ -24,6 +24,7 @@ export class Balls extends AnimBgBase {
 
   constructor(options) {
     options = Object.assign({
+      fps: 180,
       dropInterval: 500, // milliseconds
       maxBodies: 100,
       layers   :   1,
@@ -36,6 +37,8 @@ export class Balls extends AnimBgBase {
   }
 
   onInitRenderer() {
+    const {fps} = this.options
+
     // create engine
     const engine = Engine.create({
       constraintIterations: 2,
@@ -67,7 +70,7 @@ export class Balls extends AnimBgBase {
     // create runner
     this.runner = Runner.create({
       isFixed: true,
-      fps: 180,
+      fps: fps,
     })
 
 
