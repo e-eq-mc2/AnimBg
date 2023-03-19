@@ -101,11 +101,8 @@ export class Balls extends AnimBgBase {
     }
 
     Events.on(engine, 'beforeUpdate', (e) => {
-      if ( mouse.button < 0 ) return
-
       const nonStaticBodies = this.collectNonStaticBodies()
       const foundBodies = Query.point(nonStaticBodies, mouse.position)
-
 
       const now = performance.now()
       for ( const fb of foundBodies )  {

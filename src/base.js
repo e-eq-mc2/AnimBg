@@ -168,8 +168,6 @@ class AnimBgBase {
 
   windowMouseMoveWrapper(e){
     this.onCanvas(e, (x, y) => {
-      this.mouse.setPosition({x: x, y: y})
-
       const touches = e.changedTouches;
       if (touches) {
         //this.mouse.button = 0
@@ -183,8 +181,6 @@ class AnimBgBase {
 
   windowMouseDownWrapper(e){
     this.onCanvas(e, (x, y) => {
-      this.mouse.setPosition({x: x, y: y})
-
       const touches = e.changedTouches
       if (touches) {
         this.mouse.button = 0;
@@ -201,8 +197,6 @@ class AnimBgBase {
   windowMouseUpWrapper(e){
     this.mouse.button = -1;
     this.onCanvas(e, (x, y) => {
-      this.mouse.setPosition({x: x, y: y})
-
       const touches = e.changedTouches;
       if (touches) {
         //e.preventDefault()
@@ -223,11 +217,11 @@ class AnimBgBase {
     const  x = clientX - rect.left
     const  y = clientY - rect.top
 
+    const canvas = this.getCanvasElement()
+    const cx =  (x / rect.width ) * canvas.width
+    const cy =  (y / rect.height) * canvas.height
+    this.mouse.setPosition({x: cx, y: cy})
     if  (x>=0  &&  y>=0  &&  x<=rect.width  &&  y<=rect.height)  {
-      const canvas = this.getCanvasElement()
-      const cx =  (x / rect.width ) * canvas.width
-      const cy =  (y / rect.height) * canvas.height
-
       cb(cx, cy)
     }
   }
