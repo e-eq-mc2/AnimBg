@@ -132,7 +132,7 @@ export class Balls extends AnimBgBase {
     this.droppedAt = this.now
 
     const bounds  = this.render.bounds.max
-    const maxSize = bounds.y  * sizeFactors.max
+    const maxSize = Math.min(bounds.y, bounds.x)  * sizeFactors.max
     //const size = randomReal() * maxSize
     const mean = maxSize * sizeFactors.mean
     const sd   = mean * sizeFactors.sd
